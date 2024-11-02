@@ -175,6 +175,7 @@ enum ProgramStatus {
   ONGOING
   COMPLETED
   ARCHIVED
+  UPCOMING
 }
 
 enum SessionFrequency {
