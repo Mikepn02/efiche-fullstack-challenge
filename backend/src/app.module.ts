@@ -9,12 +9,13 @@ import { PatientModule } from './patient/patient.module';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { SessionsModule } from './sessions/sessions.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { MedicationModule } from './medication/medication.module';
 
 @Module({
-  imports: [AuthModule, UserModule, PrismaModule, ProgramModule, PatientModule, SessionsModule, EnrollmentsModule, MedicationModule],
+  imports: [ScheduleModule.forRoot(), AuthModule, UserModule, PrismaModule, ProgramModule, PatientModule, SessionsModule, EnrollmentsModule, MedicationModule],
   controllers: [AppController],
-   providers: [
+  providers: [
     AppService,
     {
       provide: 'APP_GUARD',
@@ -22,4 +23,4 @@ import { MedicationModule } from './medication/medication.module';
     }
   ],
 })
-export class AppModule {}
+export class AppModule { }

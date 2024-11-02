@@ -19,12 +19,20 @@ export class EnrollmentsService {
 
             if (!patient) return ApiResponse.fail(`Patient With ID: ${dto.patientId} Not Found`, 404);
 
+
             const program = await this.prisma.program.findUnique({
                 where: {
                     id: dto.programId
                 }
             })
             if (!program) return ApiResponse.fail(`Program with ID: ${dto.programId} Not Found`, 404);
+
+            if (["ARCHIVED", "COMPLETED"].includes(program.status)) {
+                return ApiResponse.fail(
+                    `Program "${program.name}" is ${program.status.toLowerCase()} and cannot accept enrollments.`,
+                    400
+                );
+            }
 
 
 
