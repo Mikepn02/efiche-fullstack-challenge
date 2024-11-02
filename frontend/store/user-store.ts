@@ -26,7 +26,7 @@ export const useUserStore = create<UserStore>()(
             clearUser: () => set({ user: null, token: null }),
         }),
         {
-            name: 'user-storage', // localStorage key
+            name: 'user-storage', 
         }
     )
 );
