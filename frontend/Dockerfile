@@ -14,7 +14,7 @@ RUN corepack enable && corepack prepare pnpm@10.12.2 --activate
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-COPY .env .env 
+
 
 RUN pnpm build
 
