@@ -45,6 +45,7 @@ export async function setToken(token: string, persist = false): Promise<void> {
         data: Array.from(new Uint8Array(cipher)),
       };
       localStorage.setItem(LOCAL_STORAGE_KEY!, JSON.stringify(payload));
+      console.log("setToken called", { persist, key: LOCAL_STORAGE_KEY });
     } catch {
       // Fallback without encryption
       localStorage.setItem(LOCAL_STORAGE_KEY!, token);
