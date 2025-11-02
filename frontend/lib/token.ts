@@ -3,9 +3,9 @@ import { env } from "next-runtime-env";
 let inMemoryToken: string | null = null;
 let inMemoryRefreshToken: string | null = null;
 
-const LOCAL_STORAGE_KEY = env('NEXT_PUBLIC_LOCAL_STORAGE_KEY');
-const REFRESH_LOCAL_STORAGE_KEY = env('NEXT_PUBLIC_REFRESH_LOCAL_STORAGE_KEY');
-const SESSION_KEY_KEY = env('NEXT_PUBLIC_SESSION_KEY_KEY');
+export const LOCAL_STORAGE_KEY = env('NEXT_PUBLIC_LOCAL_STORAGE_KEY') || 'hpms_access_token';
+export const REFRESH_LOCAL_STORAGE_KEY = env('NEXT_PUBLIC_REFRESH_LOCAL_STORAGE_KEY') || 'hpms_refresh_token';
+export const SESSION_KEY_KEY = env('NEXT_PUBLIC_SESSION_KEY_KEY') || 'hpms_session_key';
 
 async function getCryptoKey(): Promise<CryptoKey | null> {
   const keyB64 = localStorage.getItem(SESSION_KEY_KEY!);
