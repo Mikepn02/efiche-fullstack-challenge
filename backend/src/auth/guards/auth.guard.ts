@@ -28,10 +28,19 @@ export class AuthGuard implements CanActivate {
     const authHeader =
       request.headers['authorization'] || request.headers['Authorization'];
 
-    // Expect Authorization: Bearer <accessToken>
     let token: string | undefined;
-    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+
+   
+
+    if (
+      authHeader &&
+      typeof authHeader === 'string' &&
+      authHeader.startsWith('Bearer ')
+    ) {
       token = authHeader.split(' ')[1];
+    }
+    if (!token && request.cookies?.access_token) {
+      token = request.cookies.access_token;
     }
 
     if (!token) {
@@ -43,8 +52,6 @@ export class AuthGuard implements CanActivate {
         secret: process.env.JWT_ACCESS_SECRET,
       });
       request.user = decoded;
-
-    
       return true;
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired token');

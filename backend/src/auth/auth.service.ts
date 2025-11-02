@@ -23,7 +23,7 @@ export class AuthService {
   private getAccessToken(payload: any) {
     return this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: '15m',
+      expiresIn: '1m',
     });
   }
 

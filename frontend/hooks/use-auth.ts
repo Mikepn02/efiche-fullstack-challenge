@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notification } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user-store';
-import { setToken, clearToken, setRefreshToken } from '@/lib/token';
+
 
 export const useLogin = () => {
   const router = useRouter();
@@ -17,11 +17,8 @@ export const useLogin = () => {
       return data;
     },
 onSuccess: async (data) => {
-  const accessToken = data?.accessToken;
-  const refreshToken = data?.refreshToken;
   const user = data?.user;
-
-  if (!accessToken || !user) {
+  if (!user) {
     notification.error({
       message: 'Login failed',
       description: 'No token or user data received.',
@@ -29,12 +26,7 @@ onSuccess: async (data) => {
     return;
   }
 
-  await setToken(accessToken, true);
-  if (refreshToken) await setRefreshToken(refreshToken, true);
-
   setUser(user);
-
-
   await queryClient.invalidateQueries({ queryKey: ['user'] });
 
   notification.success({
@@ -100,11 +92,8 @@ export const useLogout = () => {
         },
         onError: (error: any) => {
             console.error("Logout error:", error?.response?.data?.message || error?.message);
-            // proceed to local cleanup even if server failed
             clearUser();
-            clearToken();
             queryClient.clear();
-            // Use window.location.href for immediate redirect, bypassing client-side routing
             if (typeof window !== 'undefined') {
                 window.location.href = '/auth/sign-in';
             }
@@ -116,9 +105,7 @@ export const useLogout = () => {
         },
         onSuccess: () => {
             clearUser();
-            clearToken();
             queryClient.clear();
-            // Use window.location.href for immediate redirect, bypassing client-side routing
             if (typeof window !== 'undefined') {
                 window.location.href = '/auth/sign-in';
             }
