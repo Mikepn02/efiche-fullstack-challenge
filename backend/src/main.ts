@@ -17,6 +17,10 @@ async function bootstrap() {
 
 
 
+app.use("/api-docs",() => {
+  
+})
+
 app.enableCors({
   origin: (origin, callback) => {
     const now = new Date().toISOString();

@@ -9,7 +9,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react'
 
-const Sidebar = () => {
+interface SidebarProps {
+  onItemClick?: () => void;
+}
+
+const Sidebar = ({ onItemClick }: SidebarProps) => {
   const pathname = usePathname();
   const logoutMutation = useLogout();
   const { user } = useUserStore();
@@ -18,18 +22,23 @@ const Sidebar = () => {
   
   const handleLogout = () => {
     logoutMutation.mutate();
+    onItemClick?.();
   }
-
+  
   const sidebarItems = user?.role === "ADMIN" 
     ? adminSidebarItems 
     : user?.role === "STAFF" 
     ? staffSidebarItems 
     : guestSidebarItems || [];
-  
+
   return (
     <div className='h-full w-72 flex flex-col bg-primary shadow-xl'>
       {/* Logo Section */}
-      <Link href={user ? '/' : '/auth/sign-in'} className='flex items-center justify-center h-20 px-6 border-b border-white/10'>
+      <Link 
+        href={user ? '/' : '/auth/sign-in'} 
+        className='flex items-center justify-center h-20 px-6 border-b border-white/10'
+        onClick={onItemClick}
+      >
         <Image
           src="/logo.svg"
           alt='logo'
@@ -38,14 +47,14 @@ const Sidebar = () => {
           className='object-contain'
         />
       </Link>
-      
+
       {/* Navigation Section */}
       <nav className='flex-1 py-6 overflow-y-auto'>
         <div className='flex flex-col space-y-1 px-3'>
           {sidebarItems?.map((item) => {
             const active = isActive(item.href)
             return (
-              <Link key={item.id} href={item.href}>
+              <Link key={item.id} href={item.href} onClick={onItemClick}>
                 <div
                   className={`
                     flex items-center gap-3 px-4 py-3.5 rounded-lg
@@ -68,7 +77,7 @@ const Sidebar = () => {
           })}
         </div>
       </nav>
-      
+
       {/* Logout Section */}
       {user && (
         <div className="border-t border-white/10 p-4">

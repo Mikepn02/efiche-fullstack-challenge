@@ -23,7 +23,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex h-screen overflow-hidden">
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          className="fixed inset-0 z-20 bg-black/30 backdrop-blur-lg lg:hidden"
           onClick={closeSidebar}
           aria-hidden="true"
         />
@@ -34,7 +34,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
           lg:translate-x-0 lg:static lg:block`}
       >
-        <Sidebar />
+        <Sidebar onItemClick={closeSidebar} />
       </aside>
 
       <div className="flex flex-col flex-1 w-full relative overflow-y-auto bg-white rounded-l-3xl ml-0 lg:-ml-5 z-10 md:z-30">
@@ -64,7 +64,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </header>
 
         {/* Main content area */}
-        <div className="pt-12 px-4 md:px-8 flex-1 overflow-y-auto no-scrollbar">{children}</div>
+        <div className="pt-12 px-4 md:px-8 flex-1">{children}</div>
       </div>
     </div>
   );

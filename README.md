@@ -11,6 +11,11 @@ NestJS backend + Next.js frontend with PostgreSQL. Run locally or with Docker.
 - Frontend: http://localhost:3000
 - Postgres: localhost:5433
 
+
+**Deployed Version:**
+
+- APP: http://212.86.104.213:5000/auth/sign-in (credentials are sent via email)
+
 ---
 
 ## Quick Start
@@ -27,12 +32,12 @@ docker compose up -d postgres
 cd backend
 pnpm install
 
-# Create .env file
+
 DATABASE_URL="postgresql://postgres:password@localhost:5433/starter_template"
 JWT_SECRET="your_jwt_secret"
 JWT_EXPIRES_IN="1d"
 PORT=8000
-# ... other env vars (MAIL_HOST, MAIL_PORT, etc.)
+
 
 # Setup database
 pnpm prisma generate
