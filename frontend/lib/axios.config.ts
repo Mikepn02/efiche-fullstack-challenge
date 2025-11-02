@@ -16,10 +16,10 @@ const api = axios.create({
   baseURL: API_URL,
   withCredentials: false,
 });
-console.log("API URL: ",API_URL)
-console.log("AXIOS: ",api.defaults.baseURL)
+
 api.interceptors.request.use(async (config) => {
   let token = getTokenSync();
+  
   if (!token) token = await hydrateTokenFromStorage();
   if (token) {
     config.headers = config.headers || {};
