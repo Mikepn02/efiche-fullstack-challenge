@@ -1,12 +1,14 @@
+import { env } from "next-runtime-env";
+
 let inMemoryToken: string | null = null;
 let inMemoryRefreshToken: string | null = null;
 
-const LOCAL_STORAGE_KEY = process.env.NEXT_PUBLIC_LOCAL_STORAGE_KEY || 'app_token_enc';
-const REFRESH_LOCAL_STORAGE_KEY = process.env.NEXT_PUBLIC_REFRESH_LOCAL_STORAGE_KEY || 'app_refresh_token_enc';
-const SESSION_KEY_KEY = process.env.NEXT_PUBLIC_SESSION_KEY_KEY || 'app_token_key';
+const LOCAL_STORAGE_KEY = env('NEXT_PUBLIC_LOCAL_STORAGE_KEY');
+const REFRESH_LOCAL_STORAGE_KEY = env('NEXT_PUBLIC_REFRESH_LOCAL_STORAGE_KEY');
+const SESSION_KEY_KEY = env('NEXT_PUBLIC_SESSION_KEY_KEY');
 
 async function getCryptoKey(): Promise<CryptoKey | null> {
-  const keyB64 = localStorage.getItem(SESSION_KEY_KEY);
+  const keyB64 = localStorage.getItem(SESSION_KEY_KEY!);
   if (!keyB64) return null;
   const raw = Uint8Array.from(atob(keyB64), c => c.charCodeAt(0));
   return crypto.subtle.importKey(
@@ -25,7 +27,7 @@ async function ensureCryptoKey(): Promise<CryptoKey> {
   crypto.getRandomValues(raw);
   const key = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
   const b64 = btoa(String.fromCharCode(...new Uint8Array(raw)));
-  localStorage.setItem(SESSION_KEY_KEY, b64);
+  localStorage.setItem(SESSION_KEY_KEY!, b64);
   return key;
 }
 
@@ -42,10 +44,10 @@ export async function setToken(token: string, persist = false): Promise<void> {
         iv: Array.from(iv),
         data: Array.from(new Uint8Array(cipher)),
       };
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(LOCAL_STORAGE_KEY!, JSON.stringify(payload));
     } catch {
       // Fallback without encryption
-      localStorage.setItem(LOCAL_STORAGE_KEY, token);
+      localStorage.setItem(LOCAL_STORAGE_KEY!, token);
     }
   }
   // Also set a cookie so Next middleware can read it for redirects
@@ -80,7 +82,7 @@ export function getTokenSync(): string | null {
 export async function hydrateTokenFromStorage(): Promise<string | null> {
   if (inMemoryToken) return inMemoryToken;
   if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+  const stored = localStorage.getItem(LOCAL_STORAGE_KEY!);
   if (!stored) return null;
   try {
     const parsed = JSON.parse(stored);
@@ -114,9 +116,9 @@ export async function setRefreshToken(token: string, persist = false): Promise<v
       const enc = new TextEncoder().encode(token);
       const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc);
       const payload = { iv: Array.from(iv), data: Array.from(new Uint8Array(cipher)) };
-      localStorage.setItem(REFRESH_LOCAL_STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(REFRESH_LOCAL_STORAGE_KEY!, JSON.stringify(payload));
     } catch {
-      localStorage.setItem(REFRESH_LOCAL_STORAGE_KEY, token);
+      localStorage.setItem(REFRESH_LOCAL_STORAGE_KEY!, token);
     }
   }
 }
@@ -128,7 +130,7 @@ export function getRefreshTokenSync(): string | null {
 export async function hydrateRefreshTokenFromStorage(): Promise<string | null> {
   if (inMemoryRefreshToken) return inMemoryRefreshToken;
   if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(REFRESH_LOCAL_STORAGE_KEY);
+  const stored = localStorage.getItem(REFRESH_LOCAL_STORAGE_KEY!);
   if (!stored) return null;
   try {
     const parsed = JSON.parse(stored);
@@ -154,9 +156,9 @@ export function clearToken(): void {
   inMemoryToken = null;
   inMemoryRefreshToken = null;
   if (typeof window !== 'undefined') {
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    localStorage.removeItem(REFRESH_LOCAL_STORAGE_KEY);
-    localStorage.removeItem(SESSION_KEY_KEY);
+    localStorage.removeItem(LOCAL_STORAGE_KEY!);
+    localStorage.removeItem(REFRESH_LOCAL_STORAGE_KEY!);
+    localStorage.removeItem(SESSION_KEY_KEY!);
     // Clear cookie used by middleware
     try {
       const attrs = ['path=/', 'samesite=Lax', window.location.protocol === 'https:' ? 'secure' : ''].filter(Boolean);
