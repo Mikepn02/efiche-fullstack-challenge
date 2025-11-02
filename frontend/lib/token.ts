@@ -1,7 +1,6 @@
 let inMemoryToken: string | null = null;
 let inMemoryRefreshToken: string | null = null;
 
-// Use public env vars if provided, else fall back to sane defaults
 const LOCAL_STORAGE_KEY = process.env.NEXT_PUBLIC_LOCAL_STORAGE_KEY || 'app_token_enc';
 const REFRESH_LOCAL_STORAGE_KEY = process.env.NEXT_PUBLIC_REFRESH_LOCAL_STORAGE_KEY || 'app_refresh_token_enc';
 const SESSION_KEY_KEY = process.env.NEXT_PUBLIC_SESSION_KEY_KEY || 'app_token_key';

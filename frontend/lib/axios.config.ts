@@ -2,8 +2,7 @@ import axios from 'axios';
 import { getTokenSync, hydrateTokenFromStorage, setToken, clearToken, getRefreshTokenSync, hydrateRefreshTokenFromStorage, setRefreshToken } from './token';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
-  // No cookies; use Authorization and X-Refresh-Token headers
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://212.86.104.213:5050',
   withCredentials: false,
 });
 
