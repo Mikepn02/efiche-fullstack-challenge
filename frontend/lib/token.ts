@@ -1,3 +1,4 @@
+"use client"
 import { env } from "next-runtime-env";
 
 let inMemoryToken: string | null = null;
@@ -51,7 +52,7 @@ export async function setToken(token: string, persist = false): Promise<void> {
       localStorage.setItem(LOCAL_STORAGE_KEY!, token);
     }
   }
-  // Also set a cookie so Next middleware can read it for redirects
+
   if (typeof document !== 'undefined') {
     // Try to derive expiry from JWT exp; fallback to a short session cookie
     let maxAge: number | undefined;
