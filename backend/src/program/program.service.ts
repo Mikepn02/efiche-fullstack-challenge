@@ -89,7 +89,7 @@ export class ProgramService {
                     ],
                 },
                 orderBy: {
-                    startDate: 'asc'
+                    startDate: 'desc'
                 }
             });
 

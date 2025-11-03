@@ -19,7 +19,7 @@ async function main() {
     // Hash the password
     const hashedPassword = await hash(adminPassword, 10);
 
-    // Create admin user
+ 
     const admin = await prisma.user.create({
       data: {
         name: adminName,
