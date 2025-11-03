@@ -42,3 +42,14 @@ EXPOSE 8000
 CMD ["sh", "-c", "pnpm prisma migrate deploy && node dist/src/main.js"]
 
 
+# =========================
+# Development stage
+# =========================
+FROM node:20-alpine AS development
+WORKDIR /app
+RUN npm install -g pnpm @nestjs/cli
+COPY . .
+RUN pnpm install
+RUN npx prisma generate --schema=prisma/schema.prisma
+EXPOSE 8000
+CMD ["pnpm", "run", "dev"]
