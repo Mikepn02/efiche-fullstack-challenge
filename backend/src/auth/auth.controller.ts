@@ -31,78 +31,68 @@ export class AuthController {
     private readonly userService: UserService,
   ) { }
 
-@Post('login')
-@Public()
-async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
-  const response = await this.authService.loginUser(dto);
+  @Post('login')
+  @Public()
+  async login(@Body() dto: LoginDto, @Res() res: Response) {
+    const response = await this.authService.loginUser(dto);
 
-  if (response?.status === 200 && response?.data?.accessToken) {
-    const { accessToken, refreshToken } = response.data;
+    if (response?.status === 200 && response?.data?.accessToken) {
+      const { accessToken, refreshToken } = response.data;
+      const isProduction = process.env.NODE_ENV === 'production';
 
+      res.cookie('access_token', accessToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        path: '/',
+        maxAge: 15 * 60 * 1000,
+      });
+
+      res.cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      delete response.data.accessToken;
+      delete response.data.refreshToken;
+    }
+
+    return res.status(response.status).json(response);
+  }
+
+  @Post('refresh')
+  @Public()
+  async refresh(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies?.refresh_token;
+    if (!refreshToken) return res.status(401).json({ message: 'No refresh token found' });
+
+    const result = await this.authService.refreshAccessToken(refreshToken);
+    if (result.status !== 200) return res.status(result.status).json(result);
+
+    const { accessToken, refreshToken: newRefreshToken } = result.data;
+    const isProduction = process.env.NODE_ENV === 'production';
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      domain: 'efiche-fullstack-challenge.vercel.app',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
-      maxAge: 15 * 60 * 1000, 
+      maxAge: 15 * 60 * 1000,
     });
 
-    res.cookie('refresh_token', refreshToken, {
+    res.cookie('refresh_token', newRefreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      domain: 'efiche-fullstack-challenge.vercel.app',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000, 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-
-
-    delete response.data.accessToken;
-    delete response.data.refreshToken;
+    return res.status(200).json({ message: 'Token refreshed successfully' });
   }
-
-  return res.status(response.status).json(response);
-}
-
-@Post('refresh')
-@Public()
-async refresh(@Req() req: Request, @Res() res: Response) {
-  const refreshToken = req.cookies?.refresh_token;
-  if (!refreshToken)
-    return res.status(401).json({ message: 'No refresh token found' });
-
-  const result = await this.authService.refreshAccessToken(refreshToken);
-  if (result.status !== 200)
-    return res.status(result.status).json(result);
-
-  const { accessToken, refreshToken: newRefreshToken } = result.data;
-
-
-  res.cookie('access_token', accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    domain: 'efiche-fullstack-challenge.vercel.app',
-    path: '/',
-    maxAge: 15 * 60 * 1000,
-
-  });
-
-  res.cookie('refresh_token', newRefreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    domain: 'efiche-fullstack-challenge.vercel.app',
-    path: '/',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-
-  return res.status(200).json({ message: 'Token refreshed successfully' });
-}
-
 @Post('logout')
 async logout(@Req() req: Request, @Res() res: Response) {
   const userId = req.user?.id;

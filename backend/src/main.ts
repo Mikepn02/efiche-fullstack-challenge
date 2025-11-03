@@ -5,18 +5,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { RolesGuard } from './auth/guards/role.guard';
 import getConfig from './config';
 
-
-
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api/v1');
   app.useGlobalGuards(new RolesGuard(new Reflector()));
-
-
-
-
 
   const allowedOrigins = getConfig().app.cors
     .split(',')
@@ -38,19 +31,23 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      console.warn(
-        `[${now}] 🚫 CORS BLOCKED → Origin: ${origin}\nAllowed Origins: ${allowedOrigins.join(', ')}`
-      );
-
+      console.warn(`[${now}] 🚫 CORS BLOCKED → Origin: ${origin}\nAllowed Origins: ${allowedOrigins.join(', ')}`);
       return callback(new Error(`CORS not allowed for origin: ${origin}`));
     },
-    credentials: true,
+    credentials: true, // important for cookies
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
     exposedHeaders: ['set-cookie'],
   });
 
-
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('OpenApi Specification')
@@ -58,39 +55,22 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('auth')
     .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', name: 'JWT', description: 'Enter JWT token', in: 'header' },
       'JWT-auth',
     )
     .build();
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true, // Automatically strip properties that do not have decorators
-      forbidNonWhitelisted: true, // Throw an error if there are non-whitelisted properties
-      forbidUnknownValues: true, // Throw an error if there are unknown values
-    }),
-  );
 
   const document = SwaggerModule.createDocument(app, config);
   document.paths = Object.fromEntries(
     Object.entries(document.paths).map(([path, methods]) => [
       path,
-      Object.fromEntries(
-        Object.entries(methods).map(([method, operation]) => [
-          method,
-          { ...operation, security: [{ 'JWT-auth': [] }] },
-        ]),
-      ),
+      Object.fromEntries(Object.entries(methods).map(([method, operation]) => [method, { ...operation, security: [{ 'JWT-auth': [] }] }])),
     ]),
   );
+
   SwaggerModule.setup('api-docs', app, document);
+
   await app.listen(process.env.PORT || 3000, '0.0.0.0');
 }
+
 bootstrap();
