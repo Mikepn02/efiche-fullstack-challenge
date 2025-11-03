@@ -84,6 +84,8 @@ services:
   frontend:
     image: mikepn/efiche-frontend-service:latest
     container_name: efiche-frontend
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
     ports:
       - "5000:3000"
