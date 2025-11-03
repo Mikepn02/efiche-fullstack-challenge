@@ -27,11 +27,10 @@ async function bootstrap() {
       const isAllowed = allowedOrigins.some((allowed) => origin.startsWith(allowed));
 
       if (isAllowed) {
-        console.log(`[${now}] ✅ CORS: Allowed origin → ${origin}`);
         return callback(null, true);
       }
 
-      console.warn(`[${now}] 🚫 CORS BLOCKED → Origin: ${origin}\nAllowed Origins: ${allowedOrigins.join(', ')}`);
+    
       return callback(new Error(`CORS not allowed for origin: ${origin}`));
     },
     credentials: true, // important for cookies
