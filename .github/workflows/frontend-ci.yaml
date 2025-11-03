@@ -1,4 +1,4 @@
-name: CI/CD PIPELINE
+name: Frontend CI/CD
 
 on:
   push:
@@ -6,10 +6,10 @@ on:
       - main
     paths:
       - "frontend/**"
-      - ".github/workflows/**"
+      - ".github/workflows/frontend-ci.yml"
 
 jobs:
-  build:
+  build-frontend:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Set up pnpm
         run: npm install -g pnpm
@@ -34,8 +34,8 @@ jobs:
           cd frontend
           pnpm build
 
-  build-image:
-    needs: build
+  build-frontend-image:
+    needs: build-frontend
     runs-on: ubuntu-latest
 
     steps:
@@ -55,8 +55,9 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/efiche-frontend-service:latest
-  deploy:
-    needs: [build-image]
+
+  deploy-frontend:
+    needs: [build-frontend-image]
     runs-on: ubuntu-latest
 
     steps:
@@ -66,27 +67,13 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
 
-      - name: Create Deployment folder on VPS
-        run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" \
-          ssh -o StrictHostKeyChecking=no \
-          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} \
-          "mkdir -p ~/efiche-fullstack-challenge/frontend"
-
-      - name: Copy frontend/docker-compose.yml to VPS
-        run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" \
-          scp -o StrictHostKeyChecking=no \
-          docker-compose.yml \
-          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:~/efiche-fullstack-challenge/frontend/docker-compose.yml
-
       - name: Deploy Frontend via Docker Compose
         run: |
           sshpass -p "${{ secrets.VPS_PASSWORD }}" \
           ssh -o StrictHostKeyChecking=no \
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'EOF'
-          cd ~/efiche-fullstack-challenge/frontend
+          cd ~/efiche-fullstack-challenge
           docker compose pull
-          docker compose up -d --remove-orphans
+          docker compose up -d frontend
           docker system prune -f
           EOF
