@@ -19,6 +19,36 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) { }
 
+
+  private getAccessToken(payload: any) {
+    return this.jwtService.sign(payload, {
+      secret: process.env.JWT_ACCESS_SECRET,
+      expiresIn: '15m',
+    });
+  }
+
+  private getRefreshToken(payload: any) {
+    return this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: '7d',
+    });
+  }
+
+  private async updateRefreshTokenHash(userId: string, refreshToken: string) {
+    const hashed = await hash(refreshToken, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken: hashed },
+    });
+  }
+
+  private async removeRefreshToken(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken: null },
+    });
+  }
+
   async loginUser(dto: LoginDto) {
     try {
       const user = await this.userService.getUserByEmail(dto.email);
@@ -37,73 +67,99 @@ export class AuthService {
         { expiresIn: '1d' },
       );
 
-      const sanitizedUser = { ...user, password: undefined, resetToken: undefined, resetTokenExpiry: undefined };
+      const payload = { id: user.id, email: user.email, role: user.role };
+      const accessToken = this.getAccessToken(payload);
+      const refreshToken = this.getRefreshToken(payload);
 
-      return ApiResponse.success('Login successful', { token, user: sanitizedUser }, 200);
+      await this.updateRefreshTokenHash(user.id, refreshToken);
+
+      const sanitizedUser = {
+        ...user,
+        password: undefined,
+        resetToken: undefined,
+        resetTokenExpiry: undefined,
+        hashedRefreshToken: undefined,
+      };
+
+      return ApiResponse.success(
+        'Login successful',
+        { accessToken, refreshToken, user: sanitizedUser },
+        200,
+      );
     } catch (error) {
       return ApiResponse.fail('Internal server error', error.message || error);
     }
   }
 
+async refreshAccessToken(refreshToken: string) {
+    try {
+      const decoded = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+
+      const user = await this.userService.getUserById(decoded.id);
+      if (!user || !user.hashedRefreshToken)
+        return ApiResponse.fail('Unauthorized', null, 401);
+
+      const isValid = await compare(refreshToken, user.hashedRefreshToken);
+      if (!isValid) return ApiResponse.fail('Invalid refresh token', null, 403);
+
+      const newAccessToken = this.getAccessToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
+      const newRefreshToken = this.getRefreshToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
+      await this.updateRefreshTokenHash(user.id, newRefreshToken);
+
+      return ApiResponse.success('Token refreshed', {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      });
+    } catch (err) {
+      return ApiResponse.fail('Invalid or expired refresh token', null, 403);
+    }
+  }
+
+  async logout(userId: string) {
+    await this.removeRefreshToken(userId);
+    return ApiResponse.success('Logged out successfully', null);
+  }
+
+
   async registerUser(dto: RegisterDto) {
     try {
       const hashedPassword = await hash(dto.password, 10);
-
       const user = await this.prisma.user.create({
-        data: {
-          email: dto.email,
-          password: hashedPassword,
-          name: dto.name,
-          role: "STAFF"
-        },
+        data: { ...dto, password: hashedPassword, role: 'STAFF' },
       });
-
-      const sanitizedUser = { ...user, password: undefined, resetToken: undefined, resetTokenExpiry: undefined };
-
-      return ApiResponse.success('User registered successfully', sanitizedUser, 201);
+      return ApiResponse.success('User registered successfully', user, 201);
     } catch (error: any) {
-      if (error.code === 'P2002') {
-        const duplicateField = error.meta?.target?.[0] ?? 'Field';
-        const formattedField =
-          duplicateField.charAt(0).toUpperCase() + duplicateField.slice(1);
-        return ApiResponse.fail(`${formattedField} already exists`, null, 409);
-      }
       return ApiResponse.fail('Internal server error', error.message || error);
     }
   }
 
-   async createAdmin(dto: CreateAdminDto) {
+  async createAdmin(dto: CreateAdminDto) {
     try {
-
-      if(dto.adminCreateCode !== config().app.adminCreationCode){
-         return ApiResponse.fail("You're Not Authorized to perfom this action", 401);
-      }
-
+      if (dto.adminCreateCode !== config().app.adminCreationCode)
+        return ApiResponse.fail('Unauthorized action', 401);
 
       const hashedPassword = await hash(dto.password, 10);
-
       const user = await this.prisma.user.create({
-        data: {
-          email: dto.email,
-          password: hashedPassword,
-          name: dto.name,
-          role: "ADMIN"
-        },
+        data: { ...dto, password: hashedPassword, role: 'ADMIN' },
       });
-
-      const sanitizedUser = { ...user, password: undefined, resetToken: undefined, resetTokenExpiry: undefined };
-
-      return ApiResponse.success('User registered successfully', sanitizedUser, 201);
-    } catch (error: any) {
-      if (error.code === 'P2002') {
-        const duplicateField = error.meta?.target?.[0] ?? 'Field';
-        const formattedField =
-          duplicateField.charAt(0).toUpperCase() + duplicateField.slice(1);
-        return ApiResponse.fail(`${formattedField} already exists`, null, 409);
-      }
+      return ApiResponse.success('Admin created', user, 201);
+    } catch (error) {
       return ApiResponse.fail('Internal server error', error.message || error);
     }
   }
+
 
   async getLoggedInUser(userId: string) {
     try {

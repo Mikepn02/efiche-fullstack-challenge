@@ -5,6 +5,7 @@ import {
     Modal,
     Form,
     Button,
+    notification,
 } from 'antd';
 import {
     CheckCircleOutlined,
@@ -69,18 +70,30 @@ const AddProgramSessionsModal: React.FC<AddProgramSessionsModalProps> = ({
             return;
         }
 
-        const sessionPayloads: CreateSessionDto[] = sessions.map(session => ({
-            programId: program.id,
-            title: session.title,
-            description: session.description,
-            date: session.date.toISOString(),
-            frequency: session.frequency,
-            sessionType: session.sessionType,
-        }));
+        try {
+            const sessionPayloads: CreateSessionDto[] = sessions.map(session => ({
+                programId: program.id,
+                title: session.title,
+                description: session.description,
+                date: session.date.toISOString(),
+                frequency: session.frequency,
+                sessionType: session.sessionType,
+            }));
 
-        await sessionBulkMutation.mutateAsync(sessionPayloads);
-        onSuccess?.();
-        handleClose();
+            await sessionBulkMutation.mutateAsync(sessionPayloads);
+            notification.success({
+                message: 'Sessions added successfully',
+                placement: 'topRight',
+            });
+            onSuccess?.();
+            handleClose();
+        } catch (error: any) {
+            notification.error({
+                message: 'Failed to add sessions',
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: 'topRight',
+            });
+        }
     };
     const status = program && Object.values(ProgramStatus).includes(program.session as ProgramStatus)
         ? (program.session as ProgramStatus)

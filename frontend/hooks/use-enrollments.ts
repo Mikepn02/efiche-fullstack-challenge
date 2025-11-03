@@ -1,5 +1,6 @@
 import { enrollPatient, EnrollPatientDto, getAllEnrollments } from "@/services/enrollment.service";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query"
+import { notification } from "antd";
 import { useUserStore } from "@/store/user-store";
 
 export const useEnrollments = () => {
@@ -19,9 +20,18 @@ export const useEnrollPatient = () => {
         mutationFn: (enroll: EnrollPatientDto) => enrollPatient(enroll),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['enrollments']});
+            notification.success({
+                message: 'Patient enrolled successfully',
+                placement: 'topRight',
+            });
         },
         onError: (error: any) => {
             console.error("Failed to enroll patient: ", error);
+            notification.error({
+                message: 'Failed to enroll patient',
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: 'topRight',
+            });
         }
     })
 }

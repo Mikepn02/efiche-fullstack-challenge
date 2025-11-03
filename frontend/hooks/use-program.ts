@@ -1,7 +1,7 @@
 import { createProgram, creatBulkProgramSession, createProgramSession, getAllPrograms, getProgramSessions, getUpcomingPrograms, getAllSessions } from "@/services/program.service";
 import { CreateProgramDto, CreateSessionDto } from "@/types";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { App } from "antd";
+import { notification } from "antd";
 
 import { useRouter } from "next/navigation";
 
@@ -33,10 +33,18 @@ export const useCreateProgram = () => {
         mutationFn: (program: CreateProgramDto) => createProgram(program),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['programs'] });
+            notification.success({
+                message: 'Program created successfully',
+                placement: 'topRight',
+            });
         },
         onError: (error: any) => {
-
             console.error('Program creation error:', error);
+            notification.error({
+                message: 'Failed to create program',
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: 'topRight',
+            });
         },
     });
 };
@@ -48,12 +56,19 @@ export const useCreateProgramSession = () => {
     return useMutation({
         mutationFn: (session: CreateSessionDto) => createProgramSession(session),
         onSuccess: () => {
-            
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            notification.success({
+                message: 'Session created successfully',
+                placement: 'topRight',
+            });
         },
         onError: (error: any) => {
-           
             console.error('Program creation error:', error);
+            notification.error({
+                message: 'Failed to create session',
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: 'topRight',
+            });
         },
     });
 }
@@ -65,12 +80,19 @@ export const useCreateBulkProgramSessions = () => {
     return useMutation({
         mutationFn: (sessions: CreateSessionDto[]) => creatBulkProgramSession(sessions),
         onSuccess: () => {
-
             queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            notification.success({
+                message: 'Sessions created successfully',
+                placement: 'topRight',
+            });
         },
         onError: (error: any) => {
-
             console.error('Program creation error:', error);
+            notification.error({
+                message: 'Failed to create sessions',
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: 'topRight',
+            });
         },
     });
 }

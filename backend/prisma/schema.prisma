@@ -18,6 +18,7 @@ model User {
   name             String
   email            String              @unique
   password         String
+  hashedRefreshToken String? 
   resetToken       String?
   resetTokenExpiry DateTime?
   role             Role                @default(STAFF)

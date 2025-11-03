@@ -19,6 +19,7 @@ export class SessionsController {
   @ApiResponse({ status: 404, description: 'Program not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async createProgramSession(@Body() dto: CreateSessionDto, @Res() res: Response) {
+    console.log(dto)
     const response = await this.sessionsService.createProgramSession(dto);
     return res.status(response.status).json(response);
   }

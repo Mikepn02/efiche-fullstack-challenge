@@ -1,5 +1,6 @@
 import { createPatient, createPatientDto, getAllPatients, getPatientsAssignedTo } from "@/services/patients.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { notification } from "antd";
 
 
 export const usePatients = () => {
@@ -28,9 +29,18 @@ export const useCreateProgram = () => {
         mutationFn: (patient: createPatientDto) => createPatient(patient),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['patients'] });
+            notification.success({
+                message: 'Patient created successfully',
+                placement: 'topRight',
+            });
         },
         onError: (error: any) => {
             console.error('Patient creation error:', error);
+            notification.error({
+                message: 'Failed to create patient',
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: 'topRight',
+            });
         },
     });
 };

@@ -11,62 +11,108 @@ export class SessionsService {
 
     async createProgramSession(dto: CreateSessionDto) {
         try {
+
+
             const program = await this.prisma.program.findUnique({
-                where: {
-                    id: dto.programId
-                }
+                where: { id: dto.programId },
             });
 
-            if (!program) return ApiResponse.fail(`Program with ID: ${dto.programId} Not Found`, 404);
+            if (!program) {
+                return ApiResponse.fail(
+                    `Program with ID: ${dto.programId} Not Found`,
+                    404
+                );
+            }
+
+            const sessionDate = new Date(dto.date);
+            const programStart = new Date(program.startDate);
+            const programEnd = new Date(program.endDate);
+
+
+            if (sessionDate < programStart || sessionDate > programEnd) {
+                return ApiResponse.fail(
+                    `Session date must be within program dates (${program.startDate} - ${program.endDate})`,
+                    400
+                );
+            }
 
             const session = await this.prisma.programSession.create({
-                data: dto
-            })
+                data: dto,
+            });
+
             return ApiResponse.success("Successfully Created Session", session, 201);
         } catch (error) {
             return ApiResponse.fail("Internal Server Error", error.message);
         }
     }
+
     async createProgramSessionsBulk(dtos: CreateSessionDto[]) {
         try {
             if (!dtos || dtos.length === 0) {
                 return ApiResponse.fail("No sessions provided", 400);
             }
 
+            // Get unique program IDs
             const programIds = [...new Set(dtos.map(dto => dto.programId))];
+
+            // Fetch programs from DB
             const programs = await this.prisma.program.findMany({
                 where: { id: { in: programIds } },
-                select: { id: true }
+                select: { id: true, startDate: true, endDate: true },
             });
-            const existingProgramIds = programs.map(p => p.id);
 
-            const invalidIds = programIds.filter(id => !existingProgramIds.includes(id));
+            const existingProgramIds = programs.map((p) => p.id);
+
+            // Check for invalid program IDs
+            const invalidIds = programIds.filter((id) => !existingProgramIds.includes(id));
             if (invalidIds.length > 0) {
-                return ApiResponse.fail(`Programs not found: ${invalidIds.join(', ')}`, 404);
+                return ApiResponse.fail(`Programs not found: ${invalidIds.join(", ")}`, 404);
             }
+
+            // Map programs by ID for easy lookup
+            const programMap = programs.reduce((acc, program) => {
+                acc[program.id] = program;
+                return acc;
+            }, {} as Record<string, { startDate: Date; endDate: Date }>);
+
+            // Validate each session date
+            const invalidSessions = dtos.filter((dto) => {
+                const program = programMap[dto.programId];
+                const sessionDate = new Date(dto.date);
+                return sessionDate < new Date(program.startDate) || sessionDate > new Date(program.endDate);
+            });
+
+            if (invalidSessions.length > 0) {
+                const messages = invalidSessions.map(
+                    (s) =>
+                        `Session for program ${s.programId} with date ${s.date} is out of program range`
+                );
+                return ApiResponse.fail(messages.join("; "), 400);
+            }
+
+            // Create all valid sessions
             const sessions = await this.prisma.programSession.createMany({
                 data: dtos,
-                skipDuplicates: true
+                skipDuplicates: true,
             });
 
             return ApiResponse.success("Successfully Created Sessions", sessions, 201);
-
         } catch (error) {
             return ApiResponse.fail("Internal Server Error", error.message);
         }
     }
 
 
-    async getAllProgramSessions(){
-        try{
+    async getAllProgramSessions() {
+        try {
             const programSessions = await this.prisma.programSession.findMany({})
             return ApiResponse.success("Successfully retrieved program sessions", programSessions, 200)
-        }catch(error){
+        } catch (error) {
             return ApiResponse.fail("Internal Server Error", error.message);
         }
     }
 
-    async recordAttendance(userId: string,dto: CreateSessionAttendanceDto) {
+    async recordAttendance(userId: string, dto: CreateSessionAttendanceDto) {
         try {
             const session = await this.prisma.programSession.findUnique({
                 where: {
@@ -120,7 +166,7 @@ export class SessionsService {
             const now = new Date();
 
             const AttendanceSession = await this.prisma.sessionAttendance.create({
-                data: { ...dto, attendedAt: now , attendanceMarkedById: userId }
+                data: { ...dto, attendedAt: now, attendanceMarkedById: userId }
             })
 
             return ApiResponse.success("Patient session successfully created", AttendanceSession, 201)
@@ -200,7 +246,7 @@ export class SessionsService {
         try {
             const attendances = await this.prisma.sessionAttendance.findMany({
                 include: {
-                
+
                     patient: {
                         select: {
                             firstName: true,
@@ -224,7 +270,7 @@ export class SessionsService {
                             name: true
                         }
                     }
-                    
+
 
                 },
             });

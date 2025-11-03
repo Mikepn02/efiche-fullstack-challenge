@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-import { Modal, Form } from 'antd';
+import { Modal, Form, notification } from 'antd';
 import CreateProgram from '../forms/CreateProgram';
 import CreateProgramSession from '../forms/CreateProgramSession';
 import { CreateProgramDto, CreateProgramModalProps, CreateSessionDto, ProgramFormValues, Session, SessionFormValues } from '@/types';
@@ -48,17 +48,27 @@ const CreateProgramModal: React.FC<CreateProgramModalProps> = ({
 
     const handleProgramSubmit = async (values: ProgramFormValues) => {
         setLoadingProgram(true);
-        const payload: CreateProgramDto = {
-            name: values.name,
-            description: values.description,
-            startDate: values.startDate.toISOString(),
-            endDate: values.endDate.toISOString(),
-            status: values.status,
-        };
-        const createdProgram = await programMutation.mutateAsync(payload);
-        setProgramId(createdProgram.id);
-        setProgramData(values);
-        setCurrentStep(1);
+        try {
+            const payload: CreateProgramDto = {
+                name: values.name,
+                description: values.description,
+                startDate: values.startDate.toISOString(),
+                endDate: values.endDate.toISOString(),
+                status: values.status,
+            };
+            const createdProgram = await programMutation.mutateAsync(payload);
+            setProgramId(createdProgram.id);
+            setProgramData(values);
+            setCurrentStep(1);
+        } catch (error: any) {
+            notification.error({
+                message: 'Failed to create program',
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: 'topRight',
+            });
+        } finally {
+            setLoadingProgram(false);
+        }
     };
 
     const handleAddSession = (values: SessionFormValues) => {
@@ -86,19 +96,33 @@ const CreateProgramModal: React.FC<CreateProgramModalProps> = ({
         if (!programId) {
             return;
         }
-        const sessionPayloads: CreateSessionDto[] = sessions.map(session => ({
-            programId: programId,
-            title: session.title,
-            description: session.description,
-            date: session.date.toISOString(),
-            frequency: session.frequency,
-            sessionType: session.sessionType,
-        }));
+        try {
+            setLoadingSessions(true);
+            const sessionPayloads: CreateSessionDto[] = sessions.map(session => ({
+                programId: programId,
+                title: session.title,
+                description: session.description,
+                date: session.date.toISOString(),
+                frequency: session.frequency,
+                sessionType: session.sessionType,
+            }));
 
-        await sessionBulkMutation.mutateAsync(sessionPayloads);
-
-        onSuccess?.();
-        handleClose();
+            await sessionBulkMutation.mutateAsync(sessionPayloads);
+            notification.success({
+                message: 'Sessions added successfully',
+                placement: 'topRight',
+            });
+            onSuccess?.();
+            handleClose();
+        } catch (error: any) {
+            notification.error({
+                message: 'Failed to add sessions',
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: 'topRight',
+            });
+        } finally {
+            setLoadingSessions(false);
+        }
 
     };
 

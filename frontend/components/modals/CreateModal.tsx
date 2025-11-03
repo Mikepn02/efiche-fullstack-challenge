@@ -1,4 +1,4 @@
-import { Button, DatePicker, Form, Input, InputNumber, Modal, Select, Typography, Divider, Space } from 'antd';
+import { Button, DatePicker, Form, Input, InputNumber, Modal, Select, Typography, Divider, Space, notification } from 'antd';
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { SaveOutlined, CloseOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
@@ -55,10 +55,19 @@ const CreateModal = <T extends { id?: string }>({
       setLoading(true);
       const values = await form.validateFields();
       await onSubmit(values);
+      notification.success({
+        message: isEditMode ? 'Updated successfully' : 'Created successfully',
+        placement: 'topRight',
+      });
       form.resetFields();
       onClose();
     } catch (info) {
       console.error('Validation Failed: ', info);
+      notification.error({
+        message: isEditMode ? 'Update failed' : 'Create failed',
+        description: (info as any)?.response?.data?.message || (info as any)?.message || 'Please fix errors and try again.',
+        placement: 'topRight',
+      });
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID, IsString, IsNotEmpty, IsDateString, IsEnum, IsOptional } from 'class-validator';
+import { IsNotPastDate } from 'src/decorators/date.decorator';
 
 export enum SessionType {
     ONE_ON_ONE = 'ONE_ON_ONE',

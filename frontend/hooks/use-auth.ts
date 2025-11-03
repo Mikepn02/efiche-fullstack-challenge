@@ -32,6 +32,11 @@ export const useLogin = () => {
         },
         onError: (error: any) => {
             console.error('Login error', error.response?.data?.message || error.message);
+            notification.error({
+                message: "Login failed",
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: "topRight",
+            });
         },
     });
 };
@@ -51,6 +56,11 @@ export const useCreateUser = () => {
         },
         onError: (error: any) => {
             console.error('Login error', error.response?.data?.message || error.message);
+            notification.error({
+                message: "Failed to create user",
+                description: error?.response?.data?.message || error?.message || 'Please try again.',
+                placement: "topRight",
+            });
         },
     });
 }
@@ -71,6 +81,11 @@ export const useLogout = () => {
             clearUser();
             queryClient.clear();
             router.push("/auth/sign-in");
+            notification.error({
+                message: "Logout failed on server",
+                description: error?.response?.data?.message || error?.message,
+                placement: "topRight",
+            });
         },
         onSuccess: () => {
             clearUser();

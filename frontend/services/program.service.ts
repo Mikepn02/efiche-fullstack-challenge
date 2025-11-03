@@ -28,6 +28,7 @@ export const createProgram = async(program: CreateProgramDto) => {
 
 
 export const createProgramSession = async(session: CreateSessionDto) => {
+    console.log(session);
     const response = await axios.post(`${BASE_URL}/sessions/program`,session)
     return response.data.data;
 }
