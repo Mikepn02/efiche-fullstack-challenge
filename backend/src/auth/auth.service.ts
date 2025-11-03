@@ -91,7 +91,7 @@ export class AuthService {
     }
   }
 
-async refreshAccessToken(refreshToken: string) {
+  async refreshAccessToken(refreshToken: string) {
     try {
       const decoded = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
@@ -136,9 +136,14 @@ async refreshAccessToken(refreshToken: string) {
   async registerUser(dto: RegisterDto) {
     try {
       const hashedPassword = await hash(dto.password, 10);
-      const user = await this.prisma.user.create({
-        data: { ...dto, password: hashedPassword, role: 'STAFF' },
-      });
+     const user = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        password: hashedPassword,
+        role: 'STAFF',
+      },
+    });
       return ApiResponse.success('User registered successfully', user, 201);
     } catch (error: any) {
       return ApiResponse.fail('Internal server error', error.message || error);
@@ -152,7 +157,12 @@ async refreshAccessToken(refreshToken: string) {
 
       const hashedPassword = await hash(dto.password, 10);
       const user = await this.prisma.user.create({
-        data: { ...dto, password: hashedPassword, role: 'ADMIN' },
+        data: {
+          name: dto.name,
+          email: dto.email,
+          password: hashedPassword,
+          role: 'ADMIN',
+        },
       });
       return ApiResponse.success('Admin created', user, 201);
     } catch (error) {

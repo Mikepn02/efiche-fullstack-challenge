@@ -19,16 +19,13 @@ const allowedOrigins = getConfig().app.cors.split(',').map((o) => o.trim());
 
 app.enableCors({
   origin: (origin, callback) => {
-
     if (!origin) return callback(null, true);
-
-   
     if (allowedOrigins.includes(origin)) return callback(null, true);
 
     console.warn(`Blocked CORS request from origin: ${origin}`);
     return callback(new Error(`CORS not allowed for origin: ${origin}`));
   },
-  credentials: true, 
+  credentials: true, // Allow cookies
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 });
