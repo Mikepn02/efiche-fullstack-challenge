@@ -33,7 +33,7 @@ docker compose up -d postgres
 - Postgres will be available on localhost:5433 (mapped to the container’s 5432).
 - Default credentials (as per docker-compose):
   - user: `postgres`
-  - password: `nzabera2006`
+  - password: `****`
   - database: `starter_template`
 
 You can stop it with:
@@ -56,7 +56,7 @@ pnpm install
 2) Create a `.env` file in `backend` and set the following variables (example for Dockerized Postgres):
 ```env
 # backend/.env
-DATABASE_URL="postgresql://postgres:nzabera2006@localhost:5433/starter_template"
+DATABASE_URL="postgresql://username:password@localhost:5433/starter_template"
 JWT_SECRET="your_jwt_secret_key"
 JWT_EXPIRES_IN="1d"
 PORT=8000
