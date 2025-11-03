@@ -30,7 +30,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: nzabera2006
-      POSTGRES_DB: efiche_backend_local
+      POSTGRES_DB: efiche_challenge
       PGDATA: /var/lib/postgresql/data
     volumes:
       - postgresdb:/var/lib/postgresql/data
