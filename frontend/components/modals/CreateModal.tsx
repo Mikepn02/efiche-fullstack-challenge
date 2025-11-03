@@ -108,9 +108,7 @@ const CreateModal = <T extends { id?: string }>({
         body: { paddingTop: 24 }
       }}
     >
-      <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-        {isEditMode ? 'Update the information below' : 'Fill in the required details to create a new entry'}
-      </Text>
+     
       
       <Divider style={{ margin: '16px 0 24px 0' }} />
 

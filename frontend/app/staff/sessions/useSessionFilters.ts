@@ -12,7 +12,7 @@ export const useSessionFilters = (sessions: IAttendanceResponse[] | undefined) =
     let filtered = (sessions ?? []).map((a: IAttendanceResponse) => ({
       id: String(a.id),
       patientName: a.patientName,
-      programName: a.programName,
+      programName: a.programName ?? '-', 
       attendedAt: new Date(a.attendedAt).toLocaleString(),
       sessionStatus: a.sessionStatus,
       cancelReason: a.cancelReason ? a.cancelReason : '-',
@@ -22,14 +22,15 @@ export const useSessionFilters = (sessions: IAttendanceResponse[] | undefined) =
       _rawScheduledDate: a.schelduredDate,
     }))
 
+
     if (statusFilter.length > 0) {
-      filtered = filtered.filter((item: { sessionStatus: string }) => 
+      filtered = filtered.filter((item: { sessionStatus: string }) =>
         statusFilter.includes(item.sessionStatus.toUpperCase())
       )
     }
 
     if (sessionTypeFilter.length > 0) {
-      filtered = filtered.filter((item: { sessionType: string }) => 
+      filtered = filtered.filter((item: { sessionType: string }) =>
         sessionTypeFilter.includes(item.sessionType.toUpperCase())
       )
     }

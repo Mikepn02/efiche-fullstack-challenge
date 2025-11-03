@@ -13,7 +13,7 @@ export function ReactQueryProvider({ children }: { children: React.ReactNode }) 
             theme={{
                 components: {
                     Button: {
-                        colorPrimary: '#00008B',
+                        colorPrimary: '#0000FF',
                     },
                 },
             }}

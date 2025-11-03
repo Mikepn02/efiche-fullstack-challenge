@@ -2,11 +2,13 @@
 
 import Sidebar from "@/components/shared/Sidebar";
 import { formatAvatarInitials, formatUsername } from "@/lib/utils";
+import { useUserStore } from "@/store/user-store";
 import { MenuOutlined } from "@ant-design/icons";
 import { Avatar } from "antd";
 import React, { useState } from "react";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useUserStore();
   const [isSidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   const toggleSidebar = () => {
@@ -50,13 +52,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div className="flex items-center px-3 py-2 space-x-3 rounded-xl">
               <div className="flex-col hidden sm:flex justify-end items-end">
                 <h1 className="text-sm font-medium">
-                  {formatUsername("John", "Doe")}
+                  {formatUsername(user?.name)}
                 </h1>
                 <p className="text-xs text-gray-500 truncate max-w-[150px]">
-                  johndoe@gmail.com
+                  {user?.email}
                 </p>
               </div>
-              <Avatar>{formatAvatarInitials("John", "Doe")}</Avatar>
+              <Avatar>{formatAvatarInitials(user?.name)}</Avatar>
             </div>
           </div>
         </header>

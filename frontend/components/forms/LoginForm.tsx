@@ -13,13 +13,13 @@ const LoginForm = () => {
 
   const handleKeyDownPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === ' ') {
-        event.preventDefault();
-        return false;
+      event.preventDefault();
+      return false;
     }
-}
-const handleOnFinish = async (values: { email: string; password: string }) => {
-  await loginMutation.mutate({ email: values.email, password: values.password });
-};
+  }
+  const handleOnFinish = async (values: { email: string; password: string }) => {
+    await loginMutation.mutate({ email: values.email, password: values.password });
+  };
 
   return (
     <div className=" p-6 max-w-md max-md:mx-auto">
@@ -34,8 +34,7 @@ const handleOnFinish = async (values: { email: string; password: string }) => {
         <div className="mb-10">
           <Title className="text-3xl font-extrabold">Sign in</Title>
           <Text className="text-sm mt-4">
-            Sign in to your account and explore a world of possibilities. Your
-            journey begins here.
+            Sign in to your account to manage your health information and care programs. Your journey toward improved well-being starts now
           </Text>
         </div>
 
@@ -78,14 +77,16 @@ const handleOnFinish = async (values: { email: string; password: string }) => {
         />
 
         <Form.Item className="mt-10!">
-          <Button
-            block
-            type="primary"
-            htmlType="submit"
-            className="w-full shadow-xl px-4 text-sm font-semibold rounded py-6 text-white bg-red-500 "
-          >
-            Log in
-          </Button>
+       <Button
+  block
+  type="primary"
+  htmlType="submit"
+  loading={loginMutation.isPending}
+  className="w-full shadow-xl px-4 text-sm font-semibold rounded py-6 bg-red-500 text-white [&_.ant-btn-loading-icon]:text-white"
+>
+  {loginMutation.isPending ? "Logging in..." : "Log in"}
+</Button>
+
         </Form.Item>
 
         <Text className="text-sm text-center block mt-2">

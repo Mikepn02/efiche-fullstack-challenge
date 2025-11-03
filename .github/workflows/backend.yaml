@@ -1,0 +1,104 @@
+name: CI/CD PIPELINE
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Set up pnpm
+        run: npm install -g pnpm
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Build App
+        run: pnpm build
+
+
+  build-image:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Login to Dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend                
+          file: ./backend/Dockerfile        
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/efiche-backend-service:latest
+          build-args: |
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            MAIL_HOST=${{ secrets.MAIL_HOST }}
+            MAIL_PORT=${{ secrets.MAIL_PORT }}
+            MAIL_USER=${{ secrets.MAIL_USER }}
+            MAIL_PASS=${{ secrets.MAIL_PASS }}
+            APP_URL=${{ secrets.APP_URL }}
+            PORT=${{ secrets.PORT }}
+
+
+  deploy:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    needs: [build-image]
+
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Create Deployment folder on VPS
+        run: |
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" \
+          ssh -o StrictHostKeyChecking=no \
+          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} \
+          "mkdir -p ~/efiche-fullstack-challenge"
+
+      - name: Copy docker-compose.yml to VPS
+        run: |
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" \
+          scp -o StrictHostKeyChecking=no \
+          backend/docker-compose.yml \
+          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:~/efiche-fullstack-challenge/docker-compose.yml
+
+      - name: Deploy Backend
+        run: |
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" \
+          ssh -o StrictHostKeyChecking=no \
+          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'EOF'
+          cd ~/efiche-fullstack-challenge
+          docker compose pull
+          docker compose up -d --remove-orphans
+          docker system prune -f
+          EOF
