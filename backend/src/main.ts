@@ -15,22 +15,36 @@ async function bootstrap() {
 
 
 
-const allowedOrigins = getConfig().app.cors.split(',').map((o) => o.trim());
+const allowedOrigins = getConfig().app.cors
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 app.enableCors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    const now = new Date().toISOString(); 
+    if (!origin) {
+      console.log(`[${now}] 🌐 CORS: Allowed request with no origin (Swagger or Postman)`);
+      return callback(null, true);
+    }
 
-    console.warn(`Blocked CORS request from origin: ${origin}`);
+    const isAllowed = allowedOrigins.some((allowed) => origin.startsWith(allowed));
+
+    if (isAllowed) {
+      console.log(`[${now}] ✅ CORS: Allowed origin → ${origin}`);
+      return callback(null, true);
+    }
+
+    console.warn(
+      `[${now}] 🚫 CORS BLOCKED → Origin: ${origin}\nAllowed Origins: ${allowedOrigins.join(', ')}`
+    );
+
     return callback(new Error(`CORS not allowed for origin: ${origin}`));
   },
-  credentials: true, // Allow cookies
+  credentials: true,
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 });
-
-
 
 
 

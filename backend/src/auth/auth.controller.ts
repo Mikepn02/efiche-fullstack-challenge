@@ -42,15 +42,15 @@ async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: Boolean(isHttps),
+      secure: true,
       sameSite: 'none',
       path: '/',
-      maxAge: 15 * 60 * 1000, // 15 min
+      maxAge: 15 * 60 * 1000, 
     });
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: Boolean(isHttps),
+      secure: true,
       sameSite: 'none',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
