@@ -66,12 +66,12 @@ services:
       - postgresql
 
   efiche:
-    container_name: efiche-api
+    container_name: efiche-challenge-api
     image: mikepn/backend-service:latest
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     ports:
-      - 8000:8000
+      - 5050:5050
     networks:
       - efiche-demo
     depends_on:
