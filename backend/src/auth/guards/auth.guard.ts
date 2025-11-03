@@ -28,12 +28,27 @@ export class AuthGuard implements CanActivate {
     const authHeader =
       request.headers['authorization'] || request.headers['Authorization'];
 
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing or invalid authorization header');
+    // Try Authorization header first; fallback to cookie named access_token
+    let token: string | undefined;
+    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else {
+      const cookieHeader: string | undefined = request.headers?.cookie;
+      if (cookieHeader) {
+        // Minimal cookie parsing to find access_token
+        const cookies = cookieHeader.split(';').map((c) => c.trim());
+        for (const c of cookies) {
+          if (c.startsWith('access_token=')) {
+            token = decodeURIComponent(c.substring('access_token='.length));
+            break;
+          }
+        }
+      }
     }
 
-    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('Missing authentication token');
+    }
 
     try {
       const decoded = await this.jwtService.verifyAsync(token, {

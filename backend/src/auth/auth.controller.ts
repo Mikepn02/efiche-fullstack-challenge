@@ -34,6 +34,21 @@ export class AuthController {
   @Public()
   async login(@Body() dto: LoginDto, @Res() res: Response) {
     const response = await this.authService.loginUser(dto);
+    // If login successful and token present, set HttpOnly cookie for access token
+    if (response?.status === 200 && response?.data?.token) {
+      const token = response.data.token;
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      const isProd = process.env.NODE_ENV !== 'development';
+      res.cookie('access_token', token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: 'strict',
+        path: '/',
+        maxAge: oneDayMs,
+      });
+      // Optionally avoid returning the raw token in the body
+      response.data.token = undefined;
+    }
     return res.status(response.status).json(response);
   }
 
