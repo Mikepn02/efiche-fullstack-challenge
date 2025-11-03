@@ -73,7 +73,7 @@ export class AuthController {
     if (result.status !== 200) return res.status(result.status).json(result);
 
     const { accessToken, refreshToken: newRefreshToken } = result.data;
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = config().app.node_env === "production";
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,
