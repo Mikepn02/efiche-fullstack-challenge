@@ -21,6 +21,7 @@ import { Public } from 'src/decorators/public.decorator';
 import CreateAdminDto from './dto/create-admin.dto';
 import { Roles } from 'src/decorators/role.decorator';
 import { Role } from 'src/enums/roles.enum';
+import config from 'src/config';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -37,18 +38,16 @@ export class AuthController {
 
     if (response?.status === 200 && response?.data?.token) {
       const token = response.data.token;
-      const oneDayMs = 24 * 60 * 60 * 1000;
-
-      const isProd = process.env.NODE_ENV === 'production';
-      const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+      const isProd = config().app.node_env === "production";
 
       res.cookie('access_token', token, {
         httpOnly: true,
-        secure: isProd && isHttps,
-        sameSite: (process.env.COOKIE_SAMESITE as any) || 'lax',
+        secure: isProd,          
+        sameSite: 'lax',         
         path: '/',
-        maxAge: oneDayMs,
+        maxAge: 24 * 60 * 60 * 1000,
       });
+
       response.data.token = undefined;
     }
 
