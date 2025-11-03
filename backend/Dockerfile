@@ -1,34 +1,44 @@
 # =========================
+# Builder stage
+# =========================
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN npm install -g pnpm @nestjs/cli
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install
+COPY . .
+RUN pnpm build
+
+# =========================
 # Production stage
 # =========================
-FROM node:20-slim AS production
+# Production stage
+FROM node:20-alpine AS production
 WORKDIR /app
 
 # Install pnpm globally
 RUN npm install -g pnpm
 
-# Install OpenSSL for Prisma
-RUN apt-get update -y && apt-get install -y openssl libssl-dev
-
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install **only production dependencies + Prisma CLI**
-RUN pnpm install --prod && pnpm add prisma --global
+# Install prod dependencies + prisma CLI (needed to generate client)
+RUN pnpm install --prod
+RUN pnpm add -D prisma   # or install @prisma/client explicitly if missing
 
-# Copy built artifacts and Prisma schema from builder
+# Copy build output and Prisma schema
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
-# Generate Prisma client in production (global prisma available)
+# Generate Prisma client
 RUN npx prisma generate --schema=prisma/schema.prisma
 
-# Set Node.js memory limit
-ENV NODE_OPTIONS="--max-old-space-size=8192"
+# Install wait-on to wait for Postgres
+RUN pnpm add wait-on
 
-# Expose application port
 EXPOSE 8000
 
-# Run migrations and start the app
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+# Wait for Postgres, run migrations, then start app
+CMD ["sh", "-c", "pnpm prisma migrate deploy && node dist/src/main.js"]
+
+
