@@ -14,7 +14,7 @@ async function bootstrap() {
 
 
 app.enableCors({
-  origin: 'http://localhost:3000',
+  origin: 'https://efiche-fullstack-challenge.vercel.app',
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, 
