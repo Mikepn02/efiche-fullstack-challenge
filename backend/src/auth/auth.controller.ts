@@ -40,7 +40,7 @@ export class AuthController {
       const { accessToken, refreshToken } = response.data;
 
       const isProd = config().app.node_env === 'production';
-      const cookieDomain = isProd ? 'efiche-fullstack-challenge.vercel.app' : 'localhost';
+      
 
 
       res.cookie('access_token', accessToken, {
@@ -48,7 +48,6 @@ export class AuthController {
         secure: isProd,
         sameSite: 'none',
         path: '/',
-        domain: cookieDomain,
         maxAge: 15 * 60 * 1000,
       });
 
@@ -57,7 +56,6 @@ export class AuthController {
         secure: isProd,
         sameSite: 'none',
         path: '/',
-        domain: cookieDomain,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
@@ -85,9 +83,7 @@ export class AuthController {
 
 
     const isProd = config().app.node_env === 'production';
-    const cookieDomain = isProd
-      ? 'efiche-fullstack-challenge.vercel.app'
-      : 'localhost';
+    
 
 
     console.log(config().app.node_env);
@@ -97,7 +93,6 @@ export class AuthController {
       secure: isProd,
       sameSite: 'none',
       path: '/',
-      domain: cookieDomain,
       maxAge: 15 * 60 * 1000,
     });
 
@@ -106,7 +101,6 @@ export class AuthController {
       secure: isProd,
       sameSite: 'none',
       path: '/',
-      domain: cookieDomain,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
