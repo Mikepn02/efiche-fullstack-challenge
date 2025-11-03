@@ -46,7 +46,7 @@ async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
     const cookieDomain = undefined;
     res.cookie('access_token', token, {
       httpOnly: true,    
-      secure: false, 
+      secure: true, 
       sameSite,        
       path: '/',
       maxAge: oneDayMs,

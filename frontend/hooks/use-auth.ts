@@ -8,7 +8,7 @@ import { useUserStore } from '@/store/user-store';
 export const useLogin = () => {
     const router = useRouter();
     const queryClient = useQueryClient();
-    const { setUser, setToken } = useUserStore();
+    const { setUser } = useUserStore();
 
     return useMutation({
         mutationFn: ({ email, password }: { email: string; password: string }) =>
