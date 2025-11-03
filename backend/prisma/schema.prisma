@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String              @id @default(uuid())
+  name             String
+  email            String              @unique
+  password         String
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  role             Role                @default(STAFF)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  assignedPatients Patient[]
+  Enrollment       Enrollment[]
+  markedSessions   SessionAttendance[]
+}
+
+model Patient {
+  id           String   @id @default(uuid())
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime
+  gender       Gender?
+  assignedToId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions       SessionAttendance[]
+  prescriptions  Prescription[]
+  enrollments    Enrollment[]
+  dispenceRecord DispenseRecord[]
+  assignedTo     User?               @relation(fields: [assignedToId], references: [id])
+}
+
+model Program {
+  id          String           @id @default(uuid())
+  name        String
+  description String
+  startDate   DateTime
+  endDate     DateTime
+  status      ProgramStatus
+  session     ProgramSession[]
+  enrollments Enrollment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProgramSession {
+  id                String              @id @default(uuid())
+  programId         String
+  title             String
+  description       String
+  date              DateTime
+  frequency         SessionFrequency    @default(ONCE)
+  sessionType       SessionType
+  programs          Program             @relation(fields: [programId], references: [id])
+  sessionAttendance SessionAttendance[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model SessionAttendance {
+  id                   String         @id @default(uuid())
+  patientId            String
+  sessionId            String
+  attendanceMarkedById String?
+  attendedAt           DateTime?
+  status               SessionStatus
+  cancelReason         String?
+  patient              Patient        @relation(fields: [patientId], references: [id])
+  programSession       ProgramSession @relation(fields: [sessionId], references: [id])
+  attendanceMarkedBy   User?          @relation(fields: [attendanceMarkedById], references: [id])
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+model Enrollment {
+  id           String   @id @default(uuid())
+  patientId    String
+  programId    String
+  enrolledAt   DateTime @default(now())
+  enrolledById String?
+
+  enrolledBy User?   @relation(fields: [enrolledById], references: [id])
+  patient    Patient @relation(fields: [patientId], references: [id])
+  program    Program @relation(fields: [programId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([patientId, programId])
+}
+
+model Medication {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  prescription Prescription[]
+}
+
+model Prescription {
+  id           String              @id @default(uuid())
+  medicationId String
+  patientId    String
+  dosage       String
+  frequency    MedicationFrequency
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient        Patient          @relation(fields: [patientId], references: [id])
+  medication     Medication       @relation(fields: [medicationId], references: [id])
+  dispenseRecord DispenseRecord[]
+}
+
+model DispenseRecord {
+  id           String       @id @default(uuid())
+  assignmentId String
+  patientId    String
+  collectedAt  DateTime     @default(now())
+  assignment   Prescription @relation(fields: [assignmentId], references: [id])
+  patient      Patient      @relation(fields: [patientId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  STAFF
+  ADMIN
+  GUEST
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum SessionStatus {
+  ATTENDED
+  MISSED
+  CANCELED
+}
+
+enum MedicationFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum SessionType {
+  ONE_ON_ONE
+  GROUP
+  CONSULTATION
+}
+
+enum ProgramStatus {
+  ONGOING
+  COMPLETED
+  ARCHIVED
+}
+
+enum SessionFrequency {
+  ONCE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
