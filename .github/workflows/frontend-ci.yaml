@@ -25,14 +25,12 @@ jobs:
         run: npm install -g pnpm
 
       - name: Install Frontend Dependencies
-        run: |
-          cd frontend
-          pnpm install
+        working-directory: frontend
+        run: pnpm install
 
       - name: Build Frontend
-        run: |
-          cd frontend
-          pnpm build
+        working-directory: frontend
+        run: pnpm build
 
   build-frontend-image:
     needs: build-frontend
@@ -57,7 +55,7 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/efiche-frontend-service:latest
 
   deploy-frontend:
-    needs: [build-frontend-image]
+    needs: build-frontend-image
     runs-on: ubuntu-latest
 
     steps:
@@ -65,15 +63,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install sshpass
-        run: sudo apt-get install -y sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Deploy Frontend via Docker Compose
+        env:
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+          VPS_IP: ${{ secrets.VPS_IP }}
         run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" \
-          ssh -o StrictHostKeyChecking=no \
-          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} << 'EOF'
-          cd ~/efiche-fullstack-challenge
-          docker compose pull
-          docker compose up -d frontend
-          docker system prune -f
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_IP << 'EOF'
+            cd ~/efiche-fullstack-challenge
+            docker compose pull
+            docker compose up -d frontend
+            docker system prune -f
           EOF
