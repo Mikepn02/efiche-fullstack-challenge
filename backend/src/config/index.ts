@@ -15,6 +15,7 @@ export default () => ({
   },
   app: {
     url: process.env.APP_URL,
-    adminCreationCode: process.env.ADMIN_CREATION_CODE
+    adminCreationCode: process.env.ADMIN_CREATION_CODE,
+    cors: process.env.CORS_ORIGIN
   },
 });

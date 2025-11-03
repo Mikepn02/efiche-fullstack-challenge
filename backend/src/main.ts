@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { RolesGuard } from './auth/guards/role.guard';
+import getConfig from './config';
 
 
 async function bootstrap() {
@@ -14,7 +15,7 @@ async function bootstrap() {
 
 
 app.enableCors({
-  origin: 'https://efiche-fullstack-challenge.vercel.app',
+  origin: getConfig().app.cors, 
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, 
