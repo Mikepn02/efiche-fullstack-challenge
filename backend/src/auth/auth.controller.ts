@@ -38,14 +38,16 @@ export class AuthController {
 
     if (response?.status === 200 && response?.data?.token) {
       const token = response.data.token;
-      const isProd = config().app.node_env === "production";
+      const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+      const cookieDomain = process.env.COOKIE_DOMAIN;
 
       res.cookie('access_token', token, {
         httpOnly: true,
-        secure: isProd,          
-        sameSite: 'lax',         
+        secure: Boolean(isHttps),
+        sameSite: 'none',
         path: '/',
         maxAge: 24 * 60 * 60 * 1000,
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
       });
 
       response.data.token = undefined;
