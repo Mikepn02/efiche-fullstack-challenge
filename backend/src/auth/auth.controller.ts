@@ -86,8 +86,8 @@ export class AuthController {
 
     const isProd = config().app.node_env === 'production';
     const cookieDomain = isProd
-  ? 'efiche-fullstack-challenge.vercel.app'
-  : 'localhost';
+      ? 'efiche-fullstack-challenge.vercel.app'
+      : 'localhost';
 
 
     console.log(config().app.node_env);

@@ -87,6 +87,8 @@ services:
     restart: always
     ports:
       - "5000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: "http://212.86.104.213:5050"
     env_file:
       - ./frontend/.env
 
