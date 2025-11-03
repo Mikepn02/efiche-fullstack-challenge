@@ -40,7 +40,8 @@ export class AuthController {
       const { accessToken, refreshToken } = response.data;
 
       const isProd = config().app.node_env === 'production';
-      const cookieDomain = isProd ? '.vercel.app' : 'localhost';
+      const cookieDomain = isProd ? 'efiche-fullstack-challenge.vercel.app' : 'localhost';
+
 
        console.log(isProd);
       res.cookie('access_token', accessToken, {
@@ -85,7 +86,10 @@ export class AuthController {
 
 
     const isProd = config().app.node_env === 'production';
-    const cookieDomain = isProd ? '.efiche-fullstack-challenge.vercel.app/auth/sign-in' : 'localhost';
+    const cookieDomain = isProd
+  ? 'efiche-fullstack-challenge.vercel.app'
+  : 'localhost';
+
 
     console.log(config().app.node_env);
 
