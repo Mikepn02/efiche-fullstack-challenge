@@ -29,14 +29,12 @@ onSuccess: async (data) => {
     return;
   }
 
-  // 🔐 Persist tokens securely
   await setToken(accessToken, true);
   if (refreshToken) await setRefreshToken(refreshToken, true);
 
-  // 🧠 Store user in Zustand
   setUser(user);
 
-  // 🚀 Preload user info cache
+
   await queryClient.invalidateQueries({ queryKey: ['user'] });
 
   notification.success({
@@ -44,7 +42,7 @@ onSuccess: async (data) => {
     placement: 'topRight',
   });
 
-  // ✅ Wait for browser storage sync before redirect
+
   setTimeout(() => {
     const path =
       user.role === 'ADMIN'
@@ -53,7 +51,7 @@ onSuccess: async (data) => {
         ? '/staff'
         : '/guests';
     router.replace(path);
-  }, 300); // small delay to ensure token is persisted
+  }, 300);
 },
 
     onError: (error: any) => {
