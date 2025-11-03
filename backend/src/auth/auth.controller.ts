@@ -25,11 +25,11 @@ import config from 'src/config';
 
 
 const getCookieOptions = () => {
-  const isProd = config().app.node_env === 'production';
+  // Cookie auth deprecated in favor of Authorization headers
   return {
     httpOnly: true,
-    secure: isProd,
-    sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax' | 'strict',
+    secure: true,
+    sameSite: 'none' as const,
     path: '/',
   };
 };
@@ -46,32 +46,22 @@ export class AuthController {
   @Public()
   async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
     const response = await this.authService.loginUser(dto);
-
-    if (response?.status === 200 && response?.data?.accessToken) {
-      const { accessToken, refreshToken } = response.data;
-      const cookieOptions = getCookieOptions();
-
-      res.cookie('access_token', accessToken, {
-        ...cookieOptions,
-        maxAge: 15 * 60 * 1000, 
-      });
-
-      res.cookie('refresh_token', refreshToken, {
-        ...cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000, 
-      });
-
-      delete response.data.accessToken;
-      delete response.data.refreshToken;
-    }
-
     return res.status(response.status).json(response);
   }
 
   @Post('refresh')
   @Public()
   async refresh(@Req() req: Request, @Res() res: Response) {
-    const refreshToken = req.cookies?.refresh_token;
+    let refreshToken: string | undefined;
+ 
+    if (!refreshToken) {
+      const headerToken = (req.headers['x-refresh-token'] || req.headers['authorization']) as string | undefined;
+      if (headerToken?.toLowerCase().startsWith('bearer ')) {
+        refreshToken = headerToken.slice(7);
+      } else if (headerToken) {
+        refreshToken = headerToken;
+      }
+    }
     if (!refreshToken)
       return res.status(401).json({ message: 'No refresh token found' });
 
@@ -80,19 +70,7 @@ export class AuthController {
       return res.status(result.status).json(result);
 
     const { accessToken, refreshToken: newRefreshToken } = result.data;
-    const cookieOptions = getCookieOptions();
-
-    res.cookie('access_token', accessToken, {
-      ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-
-    res.cookie('refresh_token', newRefreshToken, {
-      ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    return res.status(200).json({ message: 'Token refreshed successfully' });
+    return res.status(200).json({ message: 'Token refreshed successfully', data: { accessToken, refreshToken: newRefreshToken } });
   }
 
   @Post('logout')
@@ -100,12 +78,6 @@ export class AuthController {
     const userId = req.user?.id;
     if (userId) await this.authService.logout(userId);
 
-    const cookieOptions = getCookieOptions();
-    
-    // Clear cookies with same options used to set them
-    res.clearCookie('access_token', cookieOptions);
-    res.clearCookie('refresh_token', cookieOptions);
-    
     return res.status(200).json({ message: 'Logged out successfully' });
   }
 

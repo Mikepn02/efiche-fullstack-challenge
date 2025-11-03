@@ -28,22 +28,10 @@ export class AuthGuard implements CanActivate {
     const authHeader =
       request.headers['authorization'] || request.headers['Authorization'];
 
-    // Try Authorization header first; fallback to cookie named access_token
+    // Expect Authorization: Bearer <accessToken>
     let token: string | undefined;
     if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       token = authHeader.split(' ')[1];
-    } else {
-      const cookieHeader: string | undefined = request.headers?.cookie;
-      if (cookieHeader) {
-        // Minimal cookie parsing to find access_token
-        const cookies = cookieHeader.split(';').map((c) => c.trim());
-        for (const c of cookies) {
-          if (c.startsWith('access_token=')) {
-            token = decodeURIComponent(c.substring('access_token='.length));
-            break;
-          }
-        }
-      }
     }
 
     if (!token) {
@@ -52,13 +40,11 @@ export class AuthGuard implements CanActivate {
 
     try {
       const decoded = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET_KEY,
+        secret: process.env.JWT_ACCESS_SECRET,
       });
       request.user = decoded;
 
-      // const user = await this.authService.validateUserById(decoded.id);
-      // if (!user) throw new UnauthorizedException('User not found or inactive');
-
+    
       return true;
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired token');

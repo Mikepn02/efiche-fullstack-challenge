@@ -18,7 +18,7 @@ const LoginForm = () => {
     }
   }
   const handleOnFinish = async (values: { email: string; password: string }) => {
-    await loginMutation.mutate({ email: values.email, password: values.password });
+    await loginMutation.mutateAsync({ email: values.email, password: values.password });
   };
 
   return (

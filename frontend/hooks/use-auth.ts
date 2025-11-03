@@ -1,46 +1,72 @@
-"use client"
+"use client";
 import { getAllUsers, login, registerUser, logout } from '@/services/auth.service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notification } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user-store';
+import { setToken, clearToken, setRefreshToken } from '@/lib/token';
 
 export const useLogin = () => {
-    const router = useRouter();
-    const queryClient = useQueryClient();
-    const { setUser } = useUserStore();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { setUser } = useUserStore();
 
-    return useMutation({
-        mutationFn: ({ email, password }: { email: string; password: string }) =>
-            login(email, password),
-        onSuccess: (data) => {
-         
-            setUser(data.user);            
-            queryClient.invalidateQueries({ queryKey: ['user'] });
-            notification.success({
-                message: "Login Successful",
-                placement: "topRight",
-            });
-            const role = data.user.role;
-            if (role === 'ADMIN') {
-                router.push('/admin');
-            } else if(role === "STAFF") {
-                router.push('/staff');
-            } else{
-                router.push('/guests')
-            }
-        },
-        onError: (error: any) => {
-            console.error('Login error', error.response?.data?.message || error.message);
-            notification.error({
-                message: "Login failed",
-                description: error?.response?.data?.message || error?.message || 'Please try again.',
-                placement: "topRight",
-            });
-        },
+  return useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      const data = await login(email, password);
+      return data;
+    },
+onSuccess: async (data) => {
+  const accessToken = data?.accessToken;
+  const refreshToken = data?.refreshToken;
+  const user = data?.user;
+
+  if (!accessToken || !user) {
+    notification.error({
+      message: 'Login failed',
+      description: 'No token or user data received.',
     });
-};
+    return;
+  }
 
+  // 🔐 Persist tokens securely
+  await setToken(accessToken, true);
+  if (refreshToken) await setRefreshToken(refreshToken, true);
+
+  // 🧠 Store user in Zustand
+  setUser(user);
+
+  // 🚀 Preload user info cache
+  await queryClient.invalidateQueries({ queryKey: ['user'] });
+
+  notification.success({
+    message: 'Login Successful',
+    placement: 'topRight',
+  });
+
+  // ✅ Wait for browser storage sync before redirect
+  setTimeout(() => {
+    const path =
+      user.role === 'ADMIN'
+        ? '/admin'
+        : user.role === 'STAFF'
+        ? '/staff'
+        : '/guests';
+    router.replace(path);
+  }, 300); // small delay to ensure token is persisted
+},
+
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || error?.message;
+      console.error('Login error:', msg);
+      notification.error({
+        message: 'Login Failed',
+        description: msg || 'Please try again.',
+        placement: 'topRight',
+      });
+    },
+  });
+};
 
 export const useCreateUser = () => {
     const queryClient = useQueryClient();
@@ -73,12 +99,13 @@ export const useLogout = () => {
 
     return useMutation({
         mutationFn: async () => {
-            await logout(); // backend clears HttpOnly cookie
+            await logout();
         },
         onError: (error: any) => {
             console.error("Logout error:", error?.response?.data?.message || error?.message);
             // proceed to local cleanup even if server failed
             clearUser();
+            clearToken();
             queryClient.clear();
             router.push("/auth/sign-in");
             notification.error({
@@ -89,6 +116,7 @@ export const useLogout = () => {
         },
         onSuccess: () => {
             clearUser();
+            clearToken();
             queryClient.clear();
             router.push("/auth/sign-in");
             notification.success({
