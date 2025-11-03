@@ -38,7 +38,7 @@ async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
 
   if (response?.status === 200 && response?.data?.accessToken) {
     const { accessToken, refreshToken } = response.data;
-    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,

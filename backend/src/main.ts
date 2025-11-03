@@ -4,10 +4,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { RolesGuard } from './auth/guards/role.guard';
 import getConfig from './config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+ const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.setGlobalPrefix('api/v1');
   app.useGlobalGuards(new RolesGuard(new Reflector()));
@@ -15,6 +16,7 @@ async function bootstrap() {
 
 
 
+  app.set('trust proxy', 1);
 const allowedOrigins = getConfig().app.cors
   .split(',')
   .map((o) => o.trim())
