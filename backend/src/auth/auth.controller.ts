@@ -30,30 +30,54 @@ export class AuthController {
     private readonly userService: UserService,
   ) { }
 
-  @Post('login')
+@Post('login')
+@Public()
+async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
+  const response = await this.authService.loginUser(dto);
+
+  if (response?.status === 200 && response?.data?.token) {
+    const token = response.data.token;
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    const isProd = process.env.NODE_ENV === 'production';
+    const useSecure = isProd && isHttps;
+    const sameSite: 'strict' | 'lax' | 'none' =
+      (process.env.COOKIE_SAMESITE as any) || 'lax';
+    const cookieDomain = undefined;
+    res.cookie('access_token', token, {
+      httpOnly: true,    
+      secure: false, 
+      sameSite,        
+      path: '/',
+      maxAge: oneDayMs,
+      domain: cookieDomain, 
+    });
+    response.data.token = undefined;
+  }
+
+  return res.status(response.status).json(response);
+}
+
+ @Post('logout')
   @Public()
-  async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
-    const response = await this.authService.loginUser(dto);
-    
-    if (response?.status === 200 && response?.data?.token) {
-      const token = response.data.token;
-      const oneDayMs = 24 * 60 * 60 * 1000;
-      const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
-      const isProd = process.env.NODE_ENV !== 'development';
-      const useSecure = isProd || isHttps;
-      const sameSite: any = process.env.COOKIE_SAMESITE || 'strict';
-      const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
-      res.cookie('access_token', token, {
-        httpOnly: true,
-        secure: !!useSecure,
-        sameSite,
-        path: '/',
-        maxAge: oneDayMs,
-        domain: cookieDomain,
-      });
-      response.data.token = undefined;
-    }
-    return res.status(response.status).json(response);
+  async logout(@Req() req: Request, @Res() res: Response) {
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    const isProd = process.env.NODE_ENV === 'production';
+    const useSecure = isProd && isHttps;
+
+    const sameSite: 'strict' | 'lax' | 'none' =
+      (process.env.COOKIE_SAMESITE as any) || 'lax';
+    const cookieDomain = process.env.COOKIE_DOMAIN!;
+
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite,
+      path: '/',
+      domain: cookieDomain,
+    });
+
+    return res.status(200).json({ message: 'Logged out successfully' });
   }
 
   @Post('staff/create')

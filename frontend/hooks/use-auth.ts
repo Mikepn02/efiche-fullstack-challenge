@@ -1,5 +1,5 @@
 "use client"
-import { getAllUsers, login, registerUser } from '@/services/auth.service';
+import { getAllUsers, login, registerUser, logout } from '@/services/auth.service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notification } from 'antd';
 import { useRouter } from 'next/navigation';
@@ -14,13 +14,8 @@ export const useLogin = () => {
         mutationFn: ({ email, password }: { email: string; password: string }) =>
             login(email, password),
         onSuccess: (data) => {
-            document.cookie = `token=${data.token}; path=/; max-age=86400`;
-            document.cookie = `role=${data.role}; path=/; max-age=86400`;
-            
-            // Set user in Zustand store
-            setUser(data.user);
-            setToken(data.token);
-            
+         
+            setUser(data.user);            
             queryClient.invalidateQueries({ queryKey: ['user'] });
             notification.success({
                 message: "Login Successful",
@@ -67,37 +62,25 @@ export const useLogout = () => {
     const { clearUser } = useUserStore();
 
     return useMutation({
-        mutationFn: () => {
-            // Clear cookies immediately
-            document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-            document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-            
-            // Clear user from Zustand store immediately
-            clearUser();
-            
-            // Clear queries without waiting
-            queryClient.clear();
-            
-            // Navigate immediately
-            router.push("/auth/sign-in");
-            
-            // Show notification after navigation starts
-            setTimeout(() => {
-                notification.success({
-                    message: "Logout Successful",
-                    placement: "topRight",
-                });
-            }, 100);
-            
-            return Promise.resolve();
+        mutationFn: async () => {
+            await logout(); // backend clears HttpOnly cookie
         },
         onError: (error: any) => {
             console.error("Logout error:", error?.response?.data?.message || error?.message);
-            // Still clear and redirect on error
+            // proceed to local cleanup even if server failed
             clearUser();
             queryClient.clear();
             router.push("/auth/sign-in");
         },
+        onSuccess: () => {
+            clearUser();
+            queryClient.clear();
+            router.push("/auth/sign-in");
+            notification.success({
+                message: "Logout Successful",
+                placement: "topRight",
+            });
+        }
     });
 };
 

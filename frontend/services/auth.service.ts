@@ -19,3 +19,8 @@ export const getAllUsers = async () => {
     const response = await axios.get(`/api/v1/users`);
     return response.data.data
 }
+
+export const logout = async () => {
+    const response = await axios.post(`${BASE_URL}/logout`);
+    return response.data;
+}
