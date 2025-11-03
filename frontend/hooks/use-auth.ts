@@ -91,7 +91,6 @@ export const useCreateUser = () => {
 
 
 export const useLogout = () => {
-    const router = useRouter();
     const queryClient = useQueryClient();
     const { clearUser } = useUserStore();
 
@@ -105,7 +104,10 @@ export const useLogout = () => {
             clearUser();
             clearToken();
             queryClient.clear();
-            router.push("/auth/sign-in");
+            // Use window.location.href for immediate redirect, bypassing client-side routing
+            if (typeof window !== 'undefined') {
+                window.location.href = '/auth/sign-in';
+            }
             notification.error({
                 message: "Logout failed on server",
                 description: error?.response?.data?.message || error?.message,
@@ -116,7 +118,10 @@ export const useLogout = () => {
             clearUser();
             clearToken();
             queryClient.clear();
-            router.push("/auth/sign-in");
+            // Use window.location.href for immediate redirect, bypassing client-side routing
+            if (typeof window !== 'undefined') {
+                window.location.href = '/auth/sign-in';
+            }
             notification.success({
                 message: "Logout Successful",
                 placement: "topRight",
