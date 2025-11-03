@@ -30,35 +30,32 @@ export class AuthController {
     private readonly userService: UserService,
   ) { }
 
-@Post('login')
-@Public()
-async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
-  const response = await this.authService.loginUser(dto);
+  @Post('login')
+  @Public()
+  async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
+    const response = await this.authService.loginUser(dto);
 
-  if (response?.status === 200 && response?.data?.token) {
-    const token = response.data.token;
-    const oneDayMs = 24 * 60 * 60 * 1000;
-    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
-    const isProd = process.env.NODE_ENV === 'production';
-    const useSecure = isProd && isHttps;
-    const sameSite: 'strict' | 'lax' | 'none' =
-      (process.env.COOKIE_SAMESITE as any) || 'lax';
-    const cookieDomain = undefined;
-    res.cookie('access_token', token, {
-      httpOnly: true,    
-      secure: true, 
-      sameSite,        
-      path: '/',
-      maxAge: oneDayMs,
-      domain: cookieDomain, 
-    });
-    response.data.token = undefined;
+    if (response?.status === 200 && response?.data?.token) {
+      const token = response.data.token;
+      const oneDayMs = 24 * 60 * 60 * 1000;
+
+      const isProd = process.env.NODE_ENV === 'production';
+      const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+
+      res.cookie('access_token', token, {
+        httpOnly: true,
+        secure: isProd && isHttps,
+        sameSite: (process.env.COOKIE_SAMESITE as any) || 'lax',
+        path: '/',
+        maxAge: oneDayMs,
+      });
+      response.data.token = undefined;
+    }
+
+    return res.status(response.status).json(response);
   }
 
-  return res.status(response.status).json(response);
-}
-
- @Post('logout')
+  @Post('logout')
   @Public()
   async logout(@Req() req: Request, @Res() res: Response) {
     const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
@@ -89,7 +86,7 @@ async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
 
   @Post('admin/create')
   @Public()
-  async createAdmin(@Body() dto:CreateAdminDto, @Res() res: Response) {
+  async createAdmin(@Body() dto: CreateAdminDto, @Res() res: Response) {
     const response = await this.authService.createAdmin(dto);
     return res.status(response.status).json(response);
   }
