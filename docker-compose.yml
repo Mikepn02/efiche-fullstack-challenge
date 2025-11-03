@@ -78,19 +78,17 @@ services:
       - postgresql
     environment:
       DATABASE_URL: "postgresql://postgres:nzabera2006@efiche_postgres:5432/efiche_challenge"
-    env_file: "/backend/.env"
+    env_file:
+      - ./backend/.env
     restart: unless-stopped
   frontend:
     image: mikepn/efiche-frontend-service:latest
     container_name: efiche-frontend
     restart: always
     ports:
-      - "8080:8080" 
-    environment:
-      NEXT_PUBLIC_API_URL: ${APP_URL}  
-    env_file: "/frontend/.env"
-
-
+      - "8080:8080"
+    env_file:
+      - ./frontend/.env
 
   # pgadmin:
   #   container_name: ms_pgadmin
