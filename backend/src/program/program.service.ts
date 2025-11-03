@@ -51,7 +51,11 @@ export class ProgramService {
 
     async getAllPrograms(){
         try{
-            const programs = await this.prisma.program.findMany();
+            const programs = await this.prisma.program.findMany({
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            });
             
             return ApiResponse.success("Successfully retrieved programs", programs , 200)
         }catch(error){
@@ -89,7 +93,7 @@ export class ProgramService {
                     ],
                 },
                 orderBy: {
-                    startDate: 'desc'
+                    startDate: 'asc'
                 }
             });
 
