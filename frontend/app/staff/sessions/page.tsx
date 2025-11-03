@@ -14,7 +14,7 @@ import {
   CloseCircleOutlined,
   ClockCircleOutlined
 } from '@ant-design/icons'
-import { Button, Col, Row, Select, DatePicker, Dropdown, Badge, Spin } from 'antd'
+import { Button, Col, Row, Select, DatePicker, Dropdown, Badge, Spin, notification } from 'antd'
 import React, { useMemo } from 'react'
 import type { MenuProps } from 'antd'
 import dayjs from 'dayjs'
@@ -143,6 +143,69 @@ const SessionAttendance = () => {
     }
   ]
 
+  const handleExport: NonNullable<MenuProps['onClick']> = ({ key }) => {
+    if (!tableData || tableData.length === 0) {
+      notification.warning({ message: 'No data to export', placement: 'topRight' })
+      return
+    }
+
+    if (key === 'csv') {
+      const headers = [
+        'ID',
+        'Patient Name',
+        'Program Name',
+        'Attended At',
+        'Session Status',
+        'Cancel Reason',
+        'Scheduled Date',
+        'Session Type',
+        'Attendance Marked By',
+      ]
+
+      const rows = tableData.map((row) => [
+        row.id,
+        row.patientName,
+        row.programName,
+        row.attendedAt,
+        row.sessionStatus,
+        row.cancelReason,
+        row.schelduredDate,
+        row.sessionType,
+        row.attendanceMarkedBy,
+      ])
+
+      const escapeCsv = (val: unknown) => {
+        const s = String(val ?? '')
+        if (/[",\n]/.test(s)) {
+          return '"' + s.replace(/"/g, '""') + '"'
+        }
+        return s
+      }
+
+      const csv = [headers, ...rows]
+        .map((r) => r.map(escapeCsv).join(','))
+        .join('\n')
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const dateStr = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+      link.download = `session-attendances-${dateStr}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      notification.success({ message: 'CSV exported', placement: 'topRight' })
+      return
+    }
+
+    if (key === 'pdf') {
+      notification.info({ message: 'PDF export not implemented yet', placement: 'topRight' })
+      return
+    }
+  }
+
   const columns = (
     selectedKey: string | null,
     handleEditRow: (row: { id: string }) => void,
@@ -189,7 +252,7 @@ const SessionAttendance = () => {
             >
               Refresh
             </Button>
-            <Dropdown menu={{ items: exportMenuItems }}>
+            <Dropdown menu={{ items: exportMenuItems, onClick: handleExport }}>
               <Button icon={<DownloadOutlined />}>
                 Export
               </Button>

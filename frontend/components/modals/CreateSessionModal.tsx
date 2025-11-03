@@ -1,4 +1,3 @@
-// components/modals/AddProgramSessionsModal.tsx
 "use client"
 import React, { useState } from 'react';
 import {
@@ -157,6 +156,7 @@ const AddProgramSessionsModal: React.FC<AddProgramSessionsModalProps> = ({
                     Save Sessions ({sessions.length})
                 </Button>,
             ]}
+            centered
             destroyOnHidden
             closeIcon={
                 <span className="text-white text-xl bg-white/20 w-7 h-7 flex items-center justify-center rounded-full">
@@ -173,6 +173,8 @@ const AddProgramSessionsModal: React.FC<AddProgramSessionsModalProps> = ({
                     maxHeight: 'calc(100vh - 300px)',
                     overflowY: 'auto',
                     paddingTop: 24,
+                    scrollbarWidth: 'none',       
+                    msOverflowStyle: 'none',
                 }
             }}
         >

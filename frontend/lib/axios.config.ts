@@ -26,6 +26,17 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
       try {
+        // If the original request had no Authorization header, try hydrating and retrying once
+        const hadAuthHeader = Boolean(original?.headers?.Authorization || original?.headers?.authorization);
+        if (!hadAuthHeader) {
+          const hydrated = await hydrateTokenFromStorage();
+          if (hydrated) {
+            original.headers = original.headers || {};
+            original.headers['Authorization'] = `Bearer ${hydrated}`;
+            return api(original);
+          }
+        }
+
         let refreshToken = getRefreshTokenSync();
         if (!refreshToken) {
           refreshToken = await hydrateRefreshTokenFromStorage();

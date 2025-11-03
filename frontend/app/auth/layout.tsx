@@ -9,8 +9,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <Image
           src={'/flow-lines.svg'}
           alt='logo'
-          width={400}
-          height={400}
+          width={300}
+          height={300}
           className='absolute top-0 right-0'
         />
         <Image

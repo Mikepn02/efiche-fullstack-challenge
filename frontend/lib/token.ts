@@ -7,7 +7,7 @@ const REFRESH_LOCAL_STORAGE_KEY = process.env.NEXT_PUBLIC_REFRESH_LOCAL_STORAGE_
 const SESSION_KEY_KEY = process.env.NEXT_PUBLIC_SESSION_KEY_KEY || 'app_token_key';
 
 async function getCryptoKey(): Promise<CryptoKey | null> {
-  const keyB64 = sessionStorage.getItem(SESSION_KEY_KEY);
+  const keyB64 = localStorage.getItem(SESSION_KEY_KEY);
   if (!keyB64) return null;
   const raw = Uint8Array.from(atob(keyB64), c => c.charCodeAt(0));
   return crypto.subtle.importKey(
@@ -26,7 +26,7 @@ async function ensureCryptoKey(): Promise<CryptoKey> {
   crypto.getRandomValues(raw);
   const key = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
   const b64 = btoa(String.fromCharCode(...new Uint8Array(raw)));
-  sessionStorage.setItem(SESSION_KEY_KEY, b64);
+  localStorage.setItem(SESSION_KEY_KEY, b64);
   return key;
 }
 
@@ -157,7 +157,7 @@ export function clearToken(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
     localStorage.removeItem(REFRESH_LOCAL_STORAGE_KEY);
-    sessionStorage.removeItem(SESSION_KEY_KEY);
+    localStorage.removeItem(SESSION_KEY_KEY);
     // Clear cookie used by middleware
     try {
       const attrs = ['path=/', 'samesite=Lax', window.location.protocol === 'https:' ? 'secure' : ''].filter(Boolean);

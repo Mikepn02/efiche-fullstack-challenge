@@ -82,16 +82,17 @@ const CreateModal = <T extends { id?: string }>({
     <Modal
       title={
         <Space align="center" style={{ marginBottom: 8 }}>
-          {isEditMode ? <EditOutlined style={{ color: '#1890ff' }} /> : <PlusOutlined style={{ color: '#52c41a' }} />}
+          {isEditMode ? <EditOutlined style={{ color: '#1890ff' }} /> : <PlusOutlined style={{ color: 'blue' }} />}
           <Title level={4} style={{ margin: 0 }}>
             {title}
           </Title>
         </Space>
       }
+      centered
       open={visible}
       onCancel={handleCancel}
       width={560}
-      destroyOnClose
+      destroyOnHidden
       maskClosable={false}
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 16 }}>
@@ -118,9 +119,6 @@ const CreateModal = <T extends { id?: string }>({
       }}
     >
      
-      
-      <Divider style={{ margin: '16px 0 24px 0' }} />
-
       <Form 
         form={form} 
         layout="vertical" 

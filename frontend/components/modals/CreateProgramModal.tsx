@@ -176,6 +176,7 @@ const CreateProgramModal: React.FC<CreateProgramModalProps> = ({
                     onSubmit={handleBulkSubmit}
                 />
             }
+            centered
             destroyOnHidden
             closeIcon={
                 <span className="text-white text-xl bg-white/20 w-7 h-7 flex items-center justify-center rounded-full">
