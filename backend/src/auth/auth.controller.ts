@@ -23,7 +23,7 @@ import { Roles } from 'src/decorators/role.decorator';
 import { Role } from 'src/enums/roles.enum';
 import config from 'src/config';
 
-// Helper function to get cookie options
+
 const getCookieOptions = () => {
   const isProd = config().app.node_env === 'production';
   return {
@@ -53,12 +53,12 @@ export class AuthController {
 
       res.cookie('access_token', accessToken, {
         ...cookieOptions,
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 15 * 60 * 1000, 
       });
 
       res.cookie('refresh_token', refreshToken, {
         ...cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       });
 
       delete response.data.accessToken;
