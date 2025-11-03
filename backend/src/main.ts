@@ -4,7 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { RolesGuard } from './auth/guards/role.guard';
 import getConfig from './config';
-import * as cookieParser from 'cookie-parser';
+
 
 
 
@@ -15,7 +15,6 @@ async function bootstrap() {
   app.useGlobalGuards(new RolesGuard(new Reflector()));
 
 
-  app.use(cookieParser());
 
 
 
