@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: backend 
 
     steps:
       - name: Checkout Repo
@@ -54,8 +54,8 @@ jobs:
       - name: Build & Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend                
-          file: ./backend/Dockerfile        
+          context: ./backend               
+          file: ./backend/Dockerfile     
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/efiche-backend-service:latest
           build-args: |
@@ -73,6 +73,9 @@ jobs:
     name: Deploy Backend
     runs-on: ubuntu-latest
     needs: [build-image]
+    defaults:
+      run:
+        working-directory: backend   
 
     steps:
       - name: Install sshpass
@@ -85,12 +88,13 @@ jobs:
           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }} \
           "mkdir -p ~/efiche-fullstack-challenge"
 
-      - name: Copy docker-compose.yml to VPS
-        run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" \
-          scp -o StrictHostKeyChecking=no \
-          backend/docker-compose.yml \
-          ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:~/efiche-fullstack-challenge/docker-compose.yml
+      -  name: Copy docker-compose.yml to VPS
+         run: |
+           sshpass -p "${{ secrets.VPS_PASSWORD }}" \
+           scp -o StrictHostKeyChecking=no \
+           docker-compose.yml \
+           ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_IP }}:~/efiche-fullstack-challenge/docker-compose.yml
+
 
       - name: Deploy Backend
         run: |
