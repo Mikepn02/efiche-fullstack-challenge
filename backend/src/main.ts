@@ -15,7 +15,10 @@ async function bootstrap() {
 
 
 app.enableCors({
-  origin: getConfig().app.cors, 
+  origin: (origin, callback) => {
+    console.log('CORS request origin:', origin);
+    callback(null, origin === getConfig().app.cors);
+  },
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, 
