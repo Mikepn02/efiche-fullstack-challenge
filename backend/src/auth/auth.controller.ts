@@ -44,6 +44,7 @@ async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
+      domain: 'efiche-fullstack-challenge.vercel.app',
       path: '/',
       maxAge: 15 * 60 * 1000, 
     });
@@ -52,8 +53,9 @@ async login(@Body() dto: LoginDto, @Req() req: Request, @Res() res: Response) {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
+      domain: 'efiche-fullstack-challenge.vercel.app',
       path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
 
 
@@ -81,16 +83,19 @@ async refresh(@Req() req: Request, @Res() res: Response) {
 
   res.cookie('access_token', accessToken, {
     httpOnly: true,
-    secure: false,
+    secure: true,
     sameSite: 'none',
+    domain: 'efiche-fullstack-challenge.vercel.app',
     path: '/',
     maxAge: 15 * 60 * 1000,
+
   });
 
   res.cookie('refresh_token', newRefreshToken, {
     httpOnly: true,
-    secure: false,
+    secure: true,
     sameSite: 'none',
+    domain: 'efiche-fullstack-challenge.vercel.app',
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
