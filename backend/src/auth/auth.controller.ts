@@ -43,7 +43,6 @@ export class AuthController {
       const cookieDomain = isProd ? 'efiche-fullstack-challenge.vercel.app' : 'localhost';
 
 
-       console.log(isProd);
       res.cookie('access_token', accessToken, {
         httpOnly: true,
         secure: isProd,
