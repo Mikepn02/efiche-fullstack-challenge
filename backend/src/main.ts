@@ -14,15 +14,28 @@ async function bootstrap() {
 
 
 
+
+const allowedOrigins = getConfig().app.cors.split(',').map(origin => origin.trim());
+
 app.enableCors({
   origin: (origin, callback) => {
-    console.log('CORS request origin:', origin);
-    callback(null, origin === getConfig().app.cors);
+    console.log('CORS request origin:', origin); 
+
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true); 
+    } else {
+      console.warn(`Blocked CORS request from origin: ${origin}`);
+      callback(new Error(`CORS not allowed for origin: ${origin}`));
+    }
   },
+  credentials: true,
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, 
 });
+
+
 
 
 
