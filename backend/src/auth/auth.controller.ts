@@ -23,6 +23,17 @@ import { Roles } from 'src/decorators/role.decorator';
 import { Role } from 'src/enums/roles.enum';
 import config from 'src/config';
 
+// Helper function to get cookie options
+const getCookieOptions = () => {
+  const isProd = config().app.node_env === 'production';
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax' | 'strict',
+    path: '/',
+  };
+};
+
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
@@ -38,28 +49,17 @@ export class AuthController {
 
     if (response?.status === 200 && response?.data?.accessToken) {
       const { accessToken, refreshToken } = response.data;
-
-      const isProd = config().app.node_env === 'production';
-      
-
+      const cookieOptions = getCookieOptions();
 
       res.cookie('access_token', accessToken, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: 'none',
-        path: '/',
-        maxAge: 15 * 60 * 1000,
+        ...cookieOptions,
+        maxAge: 15 * 60 * 1000, // 15 minutes
       });
 
       res.cookie('refresh_token', refreshToken, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: 'none',
-        path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
-
-
 
       delete response.data.accessToken;
       delete response.data.refreshToken;
@@ -80,30 +80,17 @@ export class AuthController {
       return res.status(result.status).json(result);
 
     const { accessToken, refreshToken: newRefreshToken } = result.data;
-
-
-    const isProd = config().app.node_env === 'production';
-    
-
-
-    console.log(config().app.node_env);
+    const cookieOptions = getCookieOptions();
 
     res.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: 'none',
-      path: '/',
-      maxAge: 15 * 60 * 1000,
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: 'none',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    res.cookie('refresh_token', newRefreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-
 
     return res.status(200).json({ message: 'Token refreshed successfully' });
   }
@@ -113,8 +100,12 @@ export class AuthController {
     const userId = req.user?.id;
     if (userId) await this.authService.logout(userId);
 
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    const cookieOptions = getCookieOptions();
+    
+    // Clear cookies with same options used to set them
+    res.clearCookie('access_token', cookieOptions);
+    res.clearCookie('refresh_token', cookieOptions);
+    
     return res.status(200).json({ message: 'Logged out successfully' });
   }
 
